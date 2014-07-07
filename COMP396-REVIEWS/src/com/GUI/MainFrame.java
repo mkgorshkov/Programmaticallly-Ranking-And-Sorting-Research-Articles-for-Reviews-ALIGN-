@@ -6,6 +6,8 @@ import java.awt.Dimension;
 import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +19,7 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -25,6 +28,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
@@ -33,9 +37,9 @@ import javax.swing.table.DefaultTableModel;
 import com.SQL.DatabaseConnector;
 
 /**
- * Main window responsible for holding the container.
- * 
- * @author mkgo
+ * Main window responsible for being the main container.
+ * Summer 2014
+ * @author Maxim Gorshkov
  * 
  */
 public class MainFrame extends JFrame {
@@ -45,16 +49,22 @@ public class MainFrame extends JFrame {
 
 	JMenuBar menuBar = new JMenuBar();
 	JMenu menuFile;
+	JMenuItem newProject;
+	JMenuItem exit;
 	JPanel statusPanel = new JPanel();
 	JLabel statusLabel = new JLabel("");
 	JLabel usersLabel = new JLabel("Select User:");
 	JButton connect = new JButton("Connect");
+
 	JTable projects;
 
 	JComboBox users;
+	
+	JDialog projectCreate;
 	private DatabaseConnector db;
 
 	String crtUser;
+	JTextField projectName;
 
 	public MainFrame() {
 		makeConnection();
@@ -64,7 +74,7 @@ public class MainFrame extends JFrame {
 		setLocationRelativeTo(null);
 
 		loginScreen.add(addGrid());
-		setMenu();
+		// setMenu();
 		this.setJMenuBar(menuBar);
 		setStatus();
 		this.add(loginScreen);
@@ -78,9 +88,14 @@ public class MainFrame extends JFrame {
 
 	private void setMenu() {
 		menuFile = new JMenu("File");
-		JMenuItem exit = new JMenuItem("Exit");
+		newProject = new JMenuItem("New Project");
+		newProject.addActionListener(new addButtonListener());
+		menuFile.add(newProject);
+		exit = new JMenuItem("Exit to Login");
+		exit.addActionListener(new addButtonListener());
 		menuFile.add(exit);
 		menuBar.add(menuFile);
+		
 	}
 
 	private void setStatus() {
@@ -130,44 +145,112 @@ public class MainFrame extends JFrame {
 	public void goToProjects() {
 
 	}
+	
+	private void createNewProject(){
+		JButton accept = new JButton("OK");
+		accept.addActionListener(new addButtonListener());
+		
+		projectCreate = new JDialog();
+		projectCreate.setLayout(new BorderLayout());
+		projectCreate.setTitle("Create New Project");
+		projectName = new JTextField("Project Name: ");
+		projectCreate.add(projectName, BorderLayout.CENTER);
+		projectCreate.add(accept, BorderLayout.SOUTH);
+		projectCreate.pack();
+		projectCreate.setVisible(true);
+		projectCreate.setSize(200, 100);
+		projectCreate.setLocationRelativeTo(null);
+		projectCreate.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+
+	}
 
 	private void setProjScreen() {
 		projectsScreen.setLayout(new BorderLayout());
-		
+
 		crtUser = users.getSelectedItem().toString();
 
 		ArrayList<String[]> tableDataFull = db.getProjects(crtUser);
 
-		String[] columnnames = { "Project Name", "Last Updated", "" };
+		String[] columnnames = { "Project Name", "Last Updated", " "};
 
-		projects = new JTable();
+		projects = new JTable(){
+			public boolean isCellEditable(int row, int column){
+				return false;
+			}
+		};
+		
+		projects.addMouseListener(new MouseAdapter() {
+			  public void mouseClicked(MouseEvent e) {
+			    if (e.getClickCount() == 2) {
+			      JTable target = (JTable)e.getSource();
+			      int row = target.getSelectedRow();
+			      int column = target.getSelectedColumn();
+			      
+			      System.out.println(row);
+			      System.out.println(column);
+			    }
+			  }
+			});
 		
 		DefaultTableModel model = (DefaultTableModel) projects.getModel();
+
 		model.addColumn("Project Name");
 		model.addColumn("Last Updated");
+		model.addColumn(" ");
 
 		for (int i = 0; i < tableDataFull.size(); i++) {
 			model.addRow(tableDataFull.get(i));
 		}
-		
+
 		projectsScreen.add(new JScrollPane(projects));
+		setMenu();
 	}
 
 	class addButtonListener implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			JButton j = (JButton) e.getSource();
-			if (j.getText().equals("Connect")) {
-				JFrame frame = (JFrame) SwingUtilities.getRoot(j);
-				frame.remove(loginScreen);
-				statusLabel.setText("Projects Loading");
-				setProjScreen();
-				frame.add(projectsScreen);
-				frame.validate();
-				frame.repaint();
-				statusLabel.setText("Projects Loaded");
+			JButton j = null;
+			JMenuItem i = null;
+
+			if (e.getSource().getClass().equals(connect.getClass())) {
+				j = (JButton) e.getSource();
+
+				if (j.getText().equals("Connect")) {
+					JFrame frame = (JFrame) SwingUtilities.getRoot(j);
+					frame.remove(loginScreen);
+					statusLabel.setText("Projects Loading");
+					setProjScreen();
+					frame.add(projectsScreen);
+					frame.validate();
+					frame.repaint();
+					statusLabel.setText("Projects Loaded - Select project to continue...");
+				}
+				if(j.getText().equals("OK")){
+					projectCreate.setVisible(false);
+					System.out.println(projectName.getText());
+					boolean b = db.addProject(projectName.getText().substring(14), crtUser);
+					System.out.println(b);
+				}
+
+			} else if (e.getSource().getClass().equals(exit.getClass())) {
+				i = (JMenuItem) e.getSource();
+
+				if (i.getText().equals("New Project")) {
+					createNewProject();
+				}
+				if (i.getText().equals("Exit to Login")) {
+					JFrame frame = (JFrame) SwingUtilities.getRoot(j);
+					frame.remove(projectsScreen);
+					statusLabel.setText("Login Screen Loading");
+					loginScreen.add(addGrid());
+					frame.add(loginScreen);
+					frame.validate();
+					frame.repaint();
+					statusLabel.setText("Login Screen Loaded");
+				}
 			}
+
 		}
 	}
 }

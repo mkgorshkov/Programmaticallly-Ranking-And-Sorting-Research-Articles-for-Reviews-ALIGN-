@@ -137,6 +137,44 @@ public class DatabaseConnector {
 		return toReturn;
 
 	}
+	
+	/**
+	 * Get the impact factor of a specific Journal.
+	 * 
+	 * @param user - Specific user to check for.
+	 * @return double - Impact factor of the paper.
+	 */
+	public double getImpactFactor(String s){
+		Double d = 0.0;
+		ResultSet rs = null;
+		
+		try {
+			rs = stmt.executeQuery("Select ImpactFactor FROM ImpactFactor WHERE JournalName = '"+s+"'");
+			while (rs.next()) {
+				d = rs.getDouble(1);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return d;
+	}
+	
+	/**
+	 * Add individual impact factors to the database.
+	 * @param s - Short form of the journal name.
+	 * @param d - Impact factor.
+	 * @return boolean - whether the addition was successful.
+	 */
+	public boolean addImpactFactors(String s, Double d){
+		try {
+			stmt.execute("INSERT INTO ImpactFactor VALUES (null,'" + s
+					+ "',"+d+")");
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 
 	/**
 	 * Add a project for a single user.
@@ -151,7 +189,7 @@ public class DatabaseConnector {
 		String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
 
 		try {
-			stmt.executeQuery("INSERT INTO Projects VALUES (null,'" + projName
+			stmt.execute("INSERT INTO Projects VALUES (null,'" + projName
 					+ "','" + date + "','" + user + "')");
 			return true;
 		} catch (SQLException e) {
@@ -159,4 +197,9 @@ public class DatabaseConnector {
 			return false;
 		}
 	}
+
+//	public static void main(String[] args) {
+//		DatabaseConnector a = new DatabaseConnector();
+//		System.out.println(a.getImpactFactor("TRIALS"));
+//	}
 }

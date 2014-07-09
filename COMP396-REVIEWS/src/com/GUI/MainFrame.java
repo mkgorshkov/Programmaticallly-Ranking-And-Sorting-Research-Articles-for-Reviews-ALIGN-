@@ -3,6 +3,7 @@ package com.GUI;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Label;
 import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -32,7 +33,9 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 
 import com.SQL.DatabaseConnector;
 
@@ -86,16 +89,17 @@ public class MainFrame extends JFrame {
 		db = new DatabaseConnector();
 	}
 
-	private void setMenu() {
+	private void setMenu() {		
 		menuFile = new JMenu("File");
 		newProject = new JMenuItem("New Project");
 		newProject.addActionListener(new addButtonListener());
 		menuFile.add(newProject);
+		
 		exit = new JMenuItem("Exit to Login");
 		exit.addActionListener(new addButtonListener());
 		menuFile.add(exit);
-		menuBar.add(menuFile);
 		
+		menuBar.add(menuFile);
 	}
 
 	private void setStatus() {
@@ -130,7 +134,6 @@ public class MainFrame extends JFrame {
 			connect.addActionListener(new addButtonListener());
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return p;
@@ -141,26 +144,24 @@ public class MainFrame extends JFrame {
 		users.setMaximumSize(new Dimension(300, 20));
 		users.setAlignmentX(Component.CENTER_ALIGNMENT);
 	}
-
-	public void goToProjects() {
-
-	}
 	
 	private void createNewProject(){
 		JButton accept = new JButton("OK");
 		accept.addActionListener(new addButtonListener());
-		
+		Label newProjLabel = new Label("New Project Name:");
 		projectCreate = new JDialog();
 		projectCreate.setLayout(new BorderLayout());
 		projectCreate.setTitle("Create New Project");
-		projectName = new JTextField("Project Name: ");
+		projectCreate.add(newProjLabel);
+		projectCreate.add(newProjLabel, BorderLayout.NORTH);
+		projectName = new JTextField("");
 		projectCreate.add(projectName, BorderLayout.CENTER);
 		projectCreate.add(accept, BorderLayout.SOUTH);
 		projectCreate.pack();
-		projectCreate.setVisible(true);
 		projectCreate.setSize(200, 100);
 		projectCreate.setLocationRelativeTo(null);
-		projectCreate.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+		projectCreate.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		projectCreate.setVisible(true);
 
 	}
 
@@ -169,7 +170,7 @@ public class MainFrame extends JFrame {
 
 		crtUser = users.getSelectedItem().toString();
 
-		ArrayList<String[]> tableDataFull = db.getProjects(crtUser);
+		final ArrayList<String[]> tableDataFull = db.getProjects(crtUser);
 
 		String[] columnnames = { "Project Name", "Last Updated", " "};
 
@@ -186,8 +187,19 @@ public class MainFrame extends JFrame {
 			      int row = target.getSelectedRow();
 			      int column = target.getSelectedColumn();
 			      
-			      System.out.println(row);
-			      System.out.println(column);
+			      if(column == 2){
+			    	  db.deleteProject(tableDataFull.get(row)[0], crtUser);
+			    	  
+			    	  JFrame frame = (JFrame) SwingUtilities.getRoot(projectsScreen.getParent());
+						projectsScreen.removeAll();
+						statusLabel.setText("Projects Refreshed");
+						setProjScreen();
+						frame.add(projectsScreen);
+						frame.validate();
+						frame.repaint();
+			      }else{
+			    	  goToProject(tableDataFull.get(row)[0]);
+			      }
 			    }
 			  }
 			});
@@ -197,13 +209,26 @@ public class MainFrame extends JFrame {
 		model.addColumn("Project Name");
 		model.addColumn("Last Updated");
 		model.addColumn(" ");
-
+		
+		
 		for (int i = 0; i < tableDataFull.size(); i++) {
 			model.addRow(tableDataFull.get(i));
 		}
 
+		DefaultTableCellRenderer   render = new DefaultTableCellRenderer ();
+		render.setHorizontalAlignment (SwingConstants.CENTER);
+		projects.getColumnModel().getColumn(2).setCellRenderer(render);
+		
+		projects.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+		projects.getColumnModel().getColumn(0).setPreferredWidth(400);
+		projects.getColumnModel().getColumn(1).setPreferredWidth(100);
+		
 		projectsScreen.add(new JScrollPane(projects));
-		setMenu();
+		
+	}
+	
+	private void goToProject(String projectName) {
+		System.out.println(projectName);
 	}
 
 	class addButtonListener implements ActionListener {
@@ -220,17 +245,29 @@ public class MainFrame extends JFrame {
 					JFrame frame = (JFrame) SwingUtilities.getRoot(j);
 					frame.remove(loginScreen);
 					statusLabel.setText("Projects Loading");
+					projectsScreen.removeAll();
 					setProjScreen();
+
 					frame.add(projectsScreen);
 					frame.validate();
 					frame.repaint();
 					statusLabel.setText("Projects Loaded - Select project to continue...");
+					
+					menuBar.removeAll();
+					setMenu();
 				}
 				if(j.getText().equals("OK")){
 					projectCreate.setVisible(false);
 					System.out.println(projectName.getText());
-					boolean b = db.addProject(projectName.getText().substring(14), crtUser);
-					System.out.println(b);
+					boolean b = db.addProject(projectName.getText(), crtUser);	
+					
+					JFrame frame = (JFrame) SwingUtilities.getRoot(projectsScreen.getParent());
+					projectsScreen.removeAll();
+					statusLabel.setText("Projects Refreshed");
+					setProjScreen();
+					frame.add(projectsScreen);
+					frame.validate();
+					frame.repaint();
 				}
 
 			} else if (e.getSource().getClass().equals(exit.getClass())) {
@@ -240,14 +277,14 @@ public class MainFrame extends JFrame {
 					createNewProject();
 				}
 				if (i.getText().equals("Exit to Login")) {
-					JFrame frame = (JFrame) SwingUtilities.getRoot(j);
+					JFrame frame = (JFrame) SwingUtilities.getRoot(projectsScreen.getParent());
 					frame.remove(projectsScreen);
 					statusLabel.setText("Login Screen Loading");
-					loginScreen.add(addGrid());
 					frame.add(loginScreen);
 					frame.validate();
 					frame.repaint();
 					statusLabel.setText("Login Screen Loaded");
+					menuBar.removeAll();
 				}
 			}
 

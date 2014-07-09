@@ -127,7 +127,7 @@ public class DatabaseConnector {
 				String[] temp = new String[3];
 				temp[0] = rs.getString(2);
 				temp[1] = rs.getString(3);
-				temp[2] = "Delete";
+				temp[2] = "< DELETE >";
 				
 				toReturn.add(temp);
 			}
@@ -191,6 +191,24 @@ public class DatabaseConnector {
 		try {
 			stmt.execute("INSERT INTO Projects VALUES (null,'" + projName
 					+ "','" + date + "','" + user + "')");
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	/**
+	 * Remove a project for a single user.
+	 * 
+	 * @param projName - Project name to delete.
+	 * @param user - Which user the project was deleted from.
+	 * @return boolean - whether the deletion was successful.
+	 */
+	public boolean deleteProject(String projName, String user) {
+		
+		try {
+			stmt.execute("DELETE from Projects WHERE ProjectName = '" + projName + "' AND UserFK = '"+user+"'");
 			return true;
 		} catch (SQLException e) {
 			e.printStackTrace();

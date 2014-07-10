@@ -61,7 +61,6 @@ public class ImportXML {
 					ArrayList[] temp = {authors, journals, keywords};
 					records.put(title, temp);
 					
-					System.out.println("NEW");
 					title = "";
 					
 					authors = new ArrayList<String>();

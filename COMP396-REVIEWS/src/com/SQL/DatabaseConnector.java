@@ -145,7 +145,8 @@ public class DatabaseConnector {
 	 * @return double - Impact factor of the paper.
 	 */
 	public double getImpactFactor(String s){
-		Double d = 0.0;
+		s = s.toUpperCase();
+		Double d = -1.0;
 		ResultSet rs = null;
 		
 		try {

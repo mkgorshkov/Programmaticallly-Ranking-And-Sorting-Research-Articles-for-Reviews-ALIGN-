@@ -19,6 +19,7 @@ public class ImportXML {
 	ArrayList<String> authors = new ArrayList<String>();
 	ArrayList<String> journals = new ArrayList<String>();
 	ArrayList<String> keywords = new ArrayList<String>();
+	ArrayList<String> year = new ArrayList<String>();
 	
 	public ImportXML(String fileName) {
 		f = new File(fileName);
@@ -58,7 +59,7 @@ public class ImportXML {
 			if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
 
 				if(tempNode.getNodeName().equals("record")){
-					ArrayList[] temp = {authors, journals, keywords};
+					ArrayList[] temp = {authors, journals, keywords, year};
 					records.put(title, temp);
 					
 					title = "";
@@ -66,6 +67,7 @@ public class ImportXML {
 					authors = new ArrayList<String>();
 					journals = new ArrayList<String>();
 					keywords = new ArrayList<String>();
+					year = new ArrayList<String>();
 				}
 				if(tempNode.getNodeName().equals("author")){
 					authors.add(tempNode.getTextContent());
@@ -82,6 +84,9 @@ public class ImportXML {
 				if(tempNode.getNodeName().equals("keyword")){
 					keywords.add(tempNode.getTextContent());
 
+				}
+				if(tempNode.getNodeName().equals("year")){
+					year.add(tempNode.getTextContent());
 				}
 
 				if (tempNode.hasChildNodes()) {

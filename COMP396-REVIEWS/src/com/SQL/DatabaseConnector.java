@@ -141,16 +141,17 @@ public class DatabaseConnector {
 	/**
 	 * Get the impact factor of a specific Journal.
 	 * 
-	 * @param user - Specific user to check for.
+	 * @param user - Specific journal to check for.
+	 * @param year - Specific year to check for
 	 * @return double - Impact factor of the paper.
 	 */
-	public double getImpactFactor(String s){
+	public double getImpactFactor(String s, String y){
 		s = s.toUpperCase();
 		Double d = -1.0;
 		ResultSet rs = null;
 		
 		try {
-			rs = stmt.executeQuery("Select ImpactFactor FROM ImpactFactor WHERE JournalName = '"+s+"'");
+			rs = stmt.executeQuery("Select ImpactFactor FROM ImpactFactor WHERE JournalAbbr = '"+s+"' AND JournalYear = '"+y+"'");
 			while (rs.next()) {
 				d = rs.getDouble(1);
 			}
@@ -163,13 +164,13 @@ public class DatabaseConnector {
 	/**
 	 * Add individual impact factors to the database.
 	 * @param s - Short form of the journal name.
+	 * @param year - Impact factor year.
 	 * @param d - Impact factor.
 	 * @return boolean - whether the addition was successful.
 	 */
-	public boolean addImpactFactors(String s, Double d){
+	public boolean addImpactFactors(String s, String year, Double d){
 		try {
-			stmt.execute("INSERT INTO ImpactFactor VALUES (null,'" + s
-					+ "',"+d+")");
+			stmt.execute("INSERT INTO ImpactFactor VALUES (null,'" + s + "','" + year + "',"+d+")");
 			return true;
 		} catch (SQLException e) {
 			e.printStackTrace();

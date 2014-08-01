@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.List;
 
+import com.SQL.DatabaseConnector;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
@@ -20,11 +21,13 @@ public class ConnectJCR {
 	int pubYear;
 	WebClient webClient;
 	int totalJournals;
+	DatabaseConnector db;
 
 	public ConnectJCR(String url, int year) {
 		startURL = url;
 		pubYear = year;
 		webClient = new WebClient();
+		db = new DatabaseConnector();
 
 		try {
 			login();
@@ -104,17 +107,20 @@ public class ConnectJCR {
 		
 			List<HtmlTableCell> cells = rows.get(r).getCells();
 			
-			System.out.print("[");
-			for(int c = 2; c<cells.size(); c++){
-				if(c == cells.size() - 1){
-					System.out.print(cells.get(c).asText());
+//			for(int c = 2; c<cells.size(); c++){
+				if(cells.get(5).asText().contains(" ")){
+					db.addImpactFactors(cells.get(2).asText(), String.valueOf(pubYear), 0.0);
 				}else{
-					System.out.print(cells.get(c).asText()+",");
+					db.addImpactFactors(cells.get(2).asText(), String.valueOf(pubYear), Double.parseDouble(cells.get(5).asText()));
 				}
+//				if(c == cells.size() - 1){
+//					System.out.print(cells.get(c).asText());
+//				}else{
+//					System.out.print(cells.get(c).asText()+",");
+//				}
 			}
-			System.out.print("]\n");
 		}
-	}
+//	}
 
 	private void close() {
 		webClient.closeAllWindows();

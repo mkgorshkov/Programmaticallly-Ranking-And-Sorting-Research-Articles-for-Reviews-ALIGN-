@@ -11,6 +11,9 @@ import com.ImExport.ImportXML;
 import com.SQL.DatabaseConnector;
 
 public class ImpactFactorFilter {
+	
+	final String CrtYEAR = "2012";
+	
 	HashMap<String, ArrayList<String>[]> data;
 	ArrayList<String[]> ranked;
 	DatabaseConnector db;
@@ -34,16 +37,38 @@ public class ImpactFactorFilter {
 		Iterator<Entry<String, ArrayList<String>[]>> it = data.entrySet().iterator();
 		it.next();
 		while(it.hasNext()){
+			
+			
 			String[] temp = new String[2];
 			Entry<String, ArrayList<String>[]> e = it.next();
-			String a = e.getKey();
-			double d = db.getImpactFactor(e.getValue()[1].get(0));
 			
-			temp[0] = ""+d;
-			if(d == -1.0){
-				temp[1] = e.getKey() + "\n"+e.getValue()[1].get(1)+" - "+ "No IF Available";
+			String pubyear = e.getValue()[3].get(0);
+			
+			String a = e.getKey();
+			double current = db.getImpactFactor(e.getValue()[1].get(0), CrtYEAR);
+			double atpub = 0.0;
+
+			if(Integer.parseInt(pubyear) >= Integer.parseInt(CrtYEAR)){
+				atpub = current;
 			}else{
-				temp[1] = e.getKey() + "\n"+e.getValue()[1].get(1)+" - "+ d;
+				atpub = db.getImpactFactor(e.getValue()[1].get(0), pubyear);
+			}
+			
+			temp[0] = ""+current;
+			if(current == -1.0){
+				temp[1] = e.getKey() + "\n"+e.getValue()[1].get(1)+"\n"+ "Current: No IF Available\n";
+				if(atpub == -1.0){
+					temp[1] += "At Publication: No IF Available";
+				}else{
+					temp[1] += "At Publication: "+atpub+" ("+(current-atpub)+")";
+				}
+			}else{
+				temp[1] = e.getKey() + "\n"+e.getValue()[1].get(1)+"\nCurrent: "+ current+"\n";
+				if(atpub == -1.0){
+					temp[1] += "At Publication: No IF Available";
+				}else{
+					temp[1] += "At Publication: "+atpub+" ("+(current-atpub)+")";
+				}
 			}
 			ranked.add(temp);
 		}

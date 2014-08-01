@@ -66,7 +66,7 @@ public class ImpactFactor {
 			}
 			
 			data.put(title.get(i), im);
-			System.out.println(d.addImpactFactors(title.get(i), im));
+			//System.out.println(d.addImpactFactors(title.get(i), im));
 		}
 	}
 	

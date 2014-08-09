@@ -217,7 +217,48 @@ public class DatabaseConnector {
 			return false;
 		}
 	}
+	
+	/**
+	 * Returns String representing location of file of the XML.
+	 * 
+	 * @param user
+	 * @param project
+	 * @return
+	 */
+	public String getFiles(String user, String project){
+		String filename = "NaN";
+		ResultSet rs;
+		
+		try {
+			rs = stmt.executeQuery("Select Path FROM Files WHERE User = '"+user+"' AND Project = '"+project+"'");
+			while (rs.next()) {
+				filename = rs.getString(1);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return filename;
+	}
+	
+	/**
+	 * Add XML file to database.
+	 * @param user
+	 * @param description
+	 * @param project
+	 * @param file
+	 * @return
+	 */
+	public boolean addXML(String user, String description, String project, String file) {
 
+		try {
+			stmt.execute("INSERT INTO FILES VALUES (null,'" + file
+					+ "','" + description +"','" + user + "','" + project + "')");
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 //	public static void main(String[] args) {
 //		DatabaseConnector a = new DatabaseConnector();
 //		System.out.println(a.getImpactFactor("TRIALS"));

@@ -5,5 +5,11 @@
 	<classpathentry kind="lib" path="sqlite-jdbc-3.7.2.jar"/>
 	<classpathentry kind="lib" path="res/jsoup-1.7.3.jar"/>
 	<classpathentry kind="lib" path="htmlunit-2.15-OSGi.jar"/>
+	<classpathentry kind="lib" path="jxbrowser-4.4.jar"/>
+	<classpathentry kind="lib" path="jxbrowser-linux32-4.4.jar"/>
+	<classpathentry kind="lib" path="jxbrowser-linux64-4.4.jar"/>
+	<classpathentry kind="lib" path="jxbrowser-mac-4.4.jar"/>
+	<classpathentry kind="lib" path="jxbrowser-win-4.4.jar"/>
+	<classpathentry kind="lib" path="gson-2.2.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

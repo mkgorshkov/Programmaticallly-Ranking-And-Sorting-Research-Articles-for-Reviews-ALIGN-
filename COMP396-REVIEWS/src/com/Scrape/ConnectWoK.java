@@ -94,7 +94,6 @@ public class ConnectWoK {
 		String forCitation = fullpage;
 		if(fullpage.contains("+ Add Another Field | Reset Form")){
 			citations = -1;
-			System.out.println(citations);
 		}
 		else if(fullpage.contains(title)){
 			titleIndex = fullpage.indexOf(title);
@@ -103,7 +102,6 @@ public class ConnectWoK {
 			forCitation = forCitation.substring(indexCitation+13);
 			indexCitation = forCitation.indexOf("\n");
 			citations = Integer.parseInt(forCitation.substring(0, indexCitation).trim());
-			System.out.println(citations);
 		}
 		
 	}
@@ -111,11 +109,15 @@ public class ConnectWoK {
 	private void close() {
 		webClient.closeAllWindows();
 	}
-
-	public static void main(String[] args) {
-
-		ConnectWoK j = new ConnectWoK(
-				"Identifying the vulnerable patient with rupture-prone plaque");
-
+	
+	public int getCitations(){
+		return citations;
 	}
+
+//	public static void main(String[] args) {
+//
+//		ConnectWoK j = new ConnectWoK(
+//				"Identifying the vulnerable patient with rupture-prone plaque");
+//
+//	}
 }

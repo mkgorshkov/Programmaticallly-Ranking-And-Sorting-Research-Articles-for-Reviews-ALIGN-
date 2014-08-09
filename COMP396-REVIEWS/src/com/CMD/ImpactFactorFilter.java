@@ -9,6 +9,8 @@ import java.util.Map.Entry;
 
 import com.ImExport.ImportXML;
 import com.SQL.DatabaseConnector;
+import com.Scrape.ConnectScholarCited;
+import com.Scrape.ConnectWoK;
 
 public class ImpactFactorFilter {
 	
@@ -17,11 +19,13 @@ public class ImpactFactorFilter {
 	HashMap<String, ArrayList<String>[]> data;
 	ArrayList<String[]> ranked;
 	DatabaseConnector db;
+	String XMLPath;
 	
-	public ImpactFactorFilter(){
+	public ImpactFactorFilter(String path){
 		data = new HashMap<String, ArrayList<String>[]>();
 		ranked = new ArrayList<String[]>();
 		db = new DatabaseConnector();
+		XMLPath = path;
 		
 		getData();
 		filter();
@@ -29,7 +33,7 @@ public class ImpactFactorFilter {
 	}
 	
 	private void getData(){
-		ImportXML x = new ImportXML("./res/TestLibrary.xml");
+		ImportXML x = new ImportXML(XMLPath);
 		data = x.returnData();
 	}
 	
@@ -39,7 +43,8 @@ public class ImpactFactorFilter {
 		while(it.hasNext()){
 			
 			
-			String[] temp = new String[2];
+			String[] temp = new String[7];
+
 			Entry<String, ArrayList<String>[]> e = it.next();
 			
 			String pubyear = e.getValue()[3].get(0);
@@ -54,20 +59,35 @@ public class ImpactFactorFilter {
 				atpub = db.getImpactFactor(e.getValue()[1].get(0), pubyear);
 			}
 			
+			ConnectScholarCited j = new ConnectScholarCited(
+					e.getKey());
+			if(j.getCitations() == -1){
+				temp[6] = "Not Available";
+			}else{
+				temp[6] = ""+j.getCitations();
+			}
+			
+			temp[5] = e.getValue()[2].toString();
+			
 			temp[0] = ""+current;
+			temp[2] = "";
 			if(current == -1.0){
-				temp[1] = e.getKey() + "\n"+e.getValue()[1].get(1)+"\n"+ "Current: No IF Available\n";
+				temp[1] = e.getKey();
+				temp[2] = "No IF Available";
 				if(atpub == -1.0){
-					temp[1] += "At Publication: No IF Available";
+					temp[3] = "No IF Available";
 				}else{
-					temp[1] += "At Publication: "+atpub+" ("+(current-atpub)+")";
+					temp[3] = ""+atpub;
+					temp[4] = "("+(current-atpub)+")";
 				}
 			}else{
-				temp[1] = e.getKey() + "\n"+e.getValue()[1].get(1)+"\nCurrent: "+ current+"\n";
+				temp[1] = e.getKey();
+				temp[2] = ""+current;
 				if(atpub == -1.0){
-					temp[1] += "At Publication: No IF Available";
+					temp[3] = "No IF Available";
 				}else{
-					temp[1] += "At Publication: "+atpub+" ("+(current-atpub)+")";
+					temp[3] = ""+atpub;
+					temp[4] = "("+(current-atpub)+")";
 				}
 			}
 			ranked.add(temp);
@@ -93,11 +113,27 @@ public class ImpactFactorFilter {
 		for(int i = 0; i<ranked.size(); i++){
 			System.out.println("Rank "+(i+1));
 			System.out.println(ranked.get(i)[1]);
+			System.out.println(ranked.get(i)[2]);
+			System.out.println(ranked.get(i)[3]);
+			System.out.println(ranked.get(i)[4]);
+			System.out.println(ranked.get(i)[6]);
+
 			System.out.println();
 		}
 	}
 	
+	/**
+	 * get(i) [1] Title
+	 * get(i) [2] Current Impact
+	 * get(i) [3] Old Impact
+	 * get(i) [4] Keywords
+	 * @return
+	 */
+	public ArrayList<String[]> returnRanked(){
+		return ranked;
+	}
+	
 	public static void main(String[] args) {
-		ImpactFactorFilter f = new ImpactFactorFilter();
+		ImpactFactorFilter f = new ImpactFactorFilter("./res/TestLibrary.xml");
 	}
 }

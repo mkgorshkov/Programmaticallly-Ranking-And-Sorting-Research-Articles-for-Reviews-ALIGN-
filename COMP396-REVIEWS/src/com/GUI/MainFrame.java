@@ -2,7 +2,9 @@ package com.GUI;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.Label;
 import java.awt.Panel;
 import java.awt.event.ActionEvent;
@@ -12,6 +14,9 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
@@ -21,6 +26,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -35,8 +41,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
 
+import com.CMD.ImpactFactorFilter;
 import com.SQL.DatabaseConnector;
 
 /**
@@ -49,25 +55,35 @@ public class MainFrame extends JFrame {
 
 	JPanel loginScreen = new JPanel();
 	JPanel projectsScreen = new JPanel();
+	JPanel sortingScreen = new JPanel();
 
 	JMenuBar menuBar = new JMenuBar();
 	JMenu menuFile;
 	JMenuItem newProject;
 	JMenuItem exit;
+	JMenuItem exitProjects;
+	JMenuItem manageFiles;
 	JPanel statusPanel = new JPanel();
 	JLabel statusLabel = new JLabel("");
 	JLabel usersLabel = new JLabel("Select User:");
 	JButton connect = new JButton("Connect");
 
 	JTable projects;
+	JTable sortingTable;
 
 	JComboBox users;
 	
+	String projectNameValue;
+	
 	JDialog projectCreate;
+	JDialog uploadFiles;
+	String sortingXMLFile;
+	
 	private DatabaseConnector db;
 
 	String crtUser;
 	JTextField projectName;
+	JTextField fileDescription;
 
 	public MainFrame() {
 		makeConnection();
@@ -98,6 +114,19 @@ public class MainFrame extends JFrame {
 		exit = new JMenuItem("Exit to Login");
 		exit.addActionListener(new addButtonListener());
 		menuFile.add(exit);
+		
+		menuBar.add(menuFile);
+	}
+	
+	private void setSortingMenu(){
+		menuFile = new JMenu("File");
+		manageFiles = new JMenuItem("Manage Files");
+		manageFiles.addActionListener(new addButtonListener());
+		menuFile.add(manageFiles);
+		
+		exitProjects = new JMenuItem("Exit to Projects");
+		exitProjects.addActionListener(new addButtonListener());
+		menuFile.add(exitProjects);
 		
 		menuBar.add(menuFile);
 	}
@@ -164,6 +193,28 @@ public class MainFrame extends JFrame {
 		projectCreate.setVisible(true);
 
 	}
+	
+	private void UploadFile(){
+		JButton accept = new JButton("Add File");
+		JButton choose = new JButton("Choose File");
+		accept.addActionListener(new addButtonListener());
+		choose.addActionListener(new addButtonListener());
+		Label newProjLabel = new Label("File Description:");
+		uploadFiles = new JDialog();
+		uploadFiles.setLayout(new GridLayout(4,0));
+		uploadFiles.setTitle("Add XML File");
+		uploadFiles.add(choose);
+		uploadFiles.add(newProjLabel);
+		fileDescription = new JTextField("");
+		uploadFiles.add(fileDescription);
+		uploadFiles.add(accept);
+		uploadFiles.pack();
+		uploadFiles.setSize(200, 100);
+		uploadFiles.setLocationRelativeTo(null);
+		uploadFiles.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		uploadFiles.setVisible(true);
+
+	}
 
 	private void setProjScreen() {
 		projectsScreen.setLayout(new BorderLayout());
@@ -228,8 +279,112 @@ public class MainFrame extends JFrame {
 	}
 	
 	private void goToProject(String projectName) {
-		System.out.println(projectName);
+		
+		JFrame frame = (JFrame) SwingUtilities.getRoot(projectsScreen.getParent());
+		frame.remove(projectsScreen);
+		statusLabel.setText("Project Page Loading");
+		frame.add(sortingScreen);
+		frame.validate();
+		frame.repaint();
+		statusLabel.setText("Sorting Screen Loaded");
+		menuBar.removeAll();
+		addProjectDetails(projectName);
+		frame.add(sortingScreen);
+		frame.validate();
+		frame.repaint();
+		
+		menuBar.removeAll();
+		setSortingMenu();
 	}
+	
+	private void addProjectDetails(String projectName){
+		
+		projectNameValue = projectName;
+
+		
+			JLabel NaN = new JLabel("No XML files uploaded. Add file in top menu");
+			
+			Panel p = new Panel();
+		
+			sortingScreen.setLayout(new BorderLayout());
+
+			crtUser = users.getSelectedItem().toString();
+
+			String tableDataFull = db.getFiles(crtUser, projectName);
+			
+			
+			if(tableDataFull.equals("NaN")){
+				p.add(NaN);
+				NaN.setAlignmentX(SwingConstants.CENTER);
+				sortingScreen.add(p);
+			}else{
+			
+
+			sortingTable = new JTable(){
+				public boolean isCellEditable(int row, int column){
+					return false;
+				}
+			};
+			
+			ImpactFactorFilter f = new ImpactFactorFilter(tableDataFull);
+			final ArrayList<String[]> populateTable = f.returnRanked();
+
+			
+			sortingTable.addMouseListener(new MouseAdapter() {
+				  public void mouseClicked(MouseEvent e) {
+				    if (e.getClickCount() == 2) {
+				      JTable target = (JTable)e.getSource();
+				      int row = target.getSelectedRow();
+				      int column = target.getSelectedColumn();
+
+				      String url = populateTable.get(row)[5].substring(1, populateTable.get(row)[5].length()-1);
+				      url = url.replaceAll(", ", ",");
+				      url = url.replaceAll(" ", "%20");
+				      
+				      URL u = null;
+					try {
+						u = new URL("http://www.google.com/trends/fetchComponent?q="+url+"&cid=TIMESERIES_GRAPH_0&export=5");
+					} catch (MalformedURLException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+			      
+				      try {
+						try {
+							Desktop.getDesktop().browse(u.toURI());
+						} catch (URISyntaxException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				    }
+				  }
+				});
+			
+			
+			DefaultTableModel model = (DefaultTableModel) sortingTable.getModel();
+
+			model.addColumn("Title");
+			model.addColumn("Impact Factor (Current)");
+			model.addColumn("Impact Factor (Publication)");
+			model.addColumn("Impact Factor (Change)");
+			model.addColumn("Citations");
+			
+			
+			for (int i = 0; i < populateTable.size(); i++) {
+				String[] temp = {populateTable.get(i)[1], populateTable.get(i)[2], populateTable.get(i)[3], populateTable.get(i)[4], populateTable.get(i)[6]};
+				model.addRow(temp);
+			}
+
+			
+			sortingScreen.add(new JScrollPane(sortingTable));
+			
+		}
+	}
+	
 
 	class addButtonListener implements ActionListener {
 
@@ -269,6 +424,27 @@ public class MainFrame extends JFrame {
 					frame.validate();
 					frame.repaint();
 				}
+				if(j.getText().equals("Add File")){
+					uploadFiles.setVisible(false);
+					boolean b = db.addXML(crtUser, fileDescription.getText(), projectNameValue, sortingXMLFile);	
+					
+					JFrame frame = (JFrame) SwingUtilities.getRoot(sortingScreen.getParent());
+					frame.removeAll();
+					statusLabel.setText("XML File Added");
+					addProjectDetails(projectNameValue);
+					frame.add(sortingScreen);
+					frame.validate();
+					frame.repaint();
+
+				}
+				if(j.getText().equals("Choose File")){
+					//Create a file chooser
+					final JFileChooser fc = new JFileChooser();
+					int returnVal = fc.showSaveDialog(projectsScreen.getParent());
+					if(returnVal == 0){
+						sortingXMLFile = fc.getSelectedFile().toString();
+					}
+				}
 
 			} else if (e.getSource().getClass().equals(exit.getClass())) {
 				i = (JMenuItem) e.getSource();
@@ -285,6 +461,9 @@ public class MainFrame extends JFrame {
 					frame.repaint();
 					statusLabel.setText("Login Screen Loaded");
 					menuBar.removeAll();
+				}
+				if(i.getText().equals("Manage Files")){
+					UploadFile();
 				}
 			}
 

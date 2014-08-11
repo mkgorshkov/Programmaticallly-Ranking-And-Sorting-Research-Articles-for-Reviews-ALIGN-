@@ -11,5 +11,6 @@
 	<classpathentry kind="lib" path="jxbrowser-mac-4.4.jar"/>
 	<classpathentry kind="lib" path="jxbrowser-win-4.4.jar"/>
 	<classpathentry kind="lib" path="gson-2.2.4.jar"/>
+	<classpathentry kind="lib" path="json-simple-1.1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -49,9 +49,8 @@ public class ConnectTrends {
 	private void search() throws FailingHttpStatusCodeException,
 			MalformedURLException, IOException {
 		
-		
-		
 		Document doc = Jsoup.connect("http://www.google.com/trends/fetchComponent?q="+keyword+"&cid=TIMESERIES_GRAPH_0&export=3").get();
+		System.out.println(doc);
 		//process(doc);
 
 	}

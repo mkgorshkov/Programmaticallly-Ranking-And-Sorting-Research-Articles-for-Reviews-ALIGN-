@@ -2,7 +2,6 @@ package com.GUI;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Label;
@@ -14,10 +13,10 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 import javax.swing.Box;
@@ -26,6 +25,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -42,8 +42,17 @@ import javax.swing.border.BevelBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.xy.DefaultXYDataset;
+import org.jfree.data.xy.XYDataset;
+
 import com.CMD.ImpactFactorFilter;
 import com.SQL.DatabaseConnector;
+import com.Scrape.ConnectPubMedTrends;
+import com.Test.TestPubmedGraphs;
 
 /**
  * Main window responsible for being the main container.
@@ -77,6 +86,7 @@ public class MainFrame extends JFrame {
 	
 	JDialog projectCreate;
 	JDialog uploadFiles;
+	JDialog googletrends;
 	String sortingXMLFile;
 	
 	private DatabaseConnector db;
@@ -286,7 +296,7 @@ public class MainFrame extends JFrame {
 		frame.add(sortingScreen);
 		frame.validate();
 		frame.repaint();
-		statusLabel.setText("Sorting Screen Loaded");
+		statusLabel.setText("Sorting Screen Loaded. Double click paper to see keyword trends.");
 		menuBar.removeAll();
 		addProjectDetails(projectName);
 		frame.add(sortingScreen);
@@ -298,6 +308,8 @@ public class MainFrame extends JFrame {
 	}
 	
 	private void addProjectDetails(String projectName){
+		
+		statusLabel.setText("Loading project details. Please wait.");
 		
 		projectNameValue = projectName;
 
@@ -338,28 +350,17 @@ public class MainFrame extends JFrame {
 				      int column = target.getSelectedColumn();
 
 				      String url = populateTable.get(row)[5].substring(1, populateTable.get(row)[5].length()-1);
-				      url = url.replaceAll(", ", ",");
-				      url = url.replaceAll(" ", "%20");
-				      
-				      URL u = null;
-					try {
-						u = new URL("http://www.google.com/trends/fetchComponent?q="+url+"&cid=TIMESERIES_GRAPH_0&export=5");
-					} catch (MalformedURLException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-			      
-				      try {
-						try {
-							Desktop.getDesktop().browse(u.toURI());
-						} catch (URISyntaxException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
+
+						//gotoGoogleTrends("http://www.google.com/trends/fetchComponent?q="+url+"&cid=TIMESERIES_GRAPH_0&export=5");
+				      if(!url.isEmpty()){
+				    	statusLabel.setText("Loading Graph!");
+						//pubmedTrends(url);
+				    	TestPubmedGraphs g = new TestPubmedGraphs(url);
+				      }else{
+				    	statusLabel.setText("Graph could not be loaded.");
+				      }
+						// http://www2.ph.ed.ac.uk/~wjh/faq/graph/ <- for graphs from pubmed
+						//http://stackoverflow.com/questions/1304404/jfreechart-for-dynamic-xy-plots-in-java-swing-gui-application <-more pubmed
 				    }
 				  }
 				});
@@ -369,13 +370,23 @@ public class MainFrame extends JFrame {
 
 			model.addColumn("Title");
 			model.addColumn("Impact Factor (Current)");
+			model.addColumn("IF Current Perc.");
 			model.addColumn("Impact Factor (Publication)");
+			model.addColumn("IF Publication Perc.");
 			model.addColumn("Impact Factor (Change)");
 			model.addColumn("Citations");
-			
+			model.addColumn("Citations/Year Avg.");
+			model.addColumn("Citations Perc.");
+			model.addColumn("H-Index 1st Author");
+			model.addColumn("H-Index Last Author");			
 			
 			for (int i = 0; i < populateTable.size(); i++) {
-				String[] temp = {populateTable.get(i)[1], populateTable.get(i)[2], populateTable.get(i)[3], populateTable.get(i)[4], populateTable.get(i)[6]};
+				String[] temp = {populateTable.get(i)[1], populateTable.get(i)[2], 
+						populateTable.get(i)[8], populateTable.get(i)[3], 
+						populateTable.get(i)[9], populateTable.get(i)[4], 
+						populateTable.get(i)[6], populateTable.get(i)[12], 
+						populateTable.get(i)[10], populateTable.get(i)[7], 
+						populateTable.get(i)[13]};
 				model.addRow(temp);
 			}
 
@@ -384,7 +395,6 @@ public class MainFrame extends JFrame {
 			
 		}
 	}
-	
 
 	class addButtonListener implements ActionListener {
 
@@ -469,4 +479,93 @@ public class MainFrame extends JFrame {
 
 		}
 	}
+	
+	private void gotoGoogleTrends(String urlinput){
+		googletrends = new JDialog();
+		googletrends.setTitle("Google Trends Graph");
+		
+		JEditorPane jep = new JEditorPane();
+		jep.setEditable(false);   
+
+		try {
+		  jep.setPage(urlinput);
+		}catch (IOException e) {
+		  jep.setContentType("text/html");
+		  jep.setText("<html>Could not load</html>");
+		} 
+		
+		JScrollPane scrollPane = new JScrollPane(jep);     
+		googletrends.add(scrollPane);
+		
+		googletrends.pack();
+		googletrends.setSize(600, 400);
+		googletrends.setLocationRelativeTo(null);
+		googletrends.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		googletrends.setVisible(true);
+
+	}
+	
+	private void pubmedTrends(String input){
+		googletrends = new JDialog();
+		googletrends.setTitle("Google Trends Graph");
+
+        XYDataset ds = createDataset(input);
+       // JFreeChart chart = ChartFactory.createBarChart("Keyword Trends", "Year", "No Papers Published", (CategoryDataset) ds);
+        JFreeChart chart = ChartFactory.createXYLineChart("Keyword Trends",
+                "Year", "No. Papers with Keyword", ds, PlotOrientation.VERTICAL, true, true,
+                false);
+
+        ChartPanel cp = new ChartPanel(chart);
+
+        googletrends.add(cp);
+        googletrends.pack();
+		googletrends.setSize(600, 400);
+		googletrends.setLocationRelativeTo(null);
+		googletrends.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		googletrends.setVisible(true);
+    }
+
+	private XYDataset createDataset(String input) {
+		String[] inputs = input.split(", ");
+		
+        DefaultXYDataset ds = new DefaultXYDataset();
+        
+        for(String key : inputs){
+        	ArrayList<Double> year = new ArrayList<Double>();
+        	ArrayList<Double> entry = new ArrayList<Double>();
+        	
+        ConnectPubMedTrends p = new ConnectPubMedTrends(key);
+        HashMap<Integer, Integer> map = p.getYearMap();
+        if(!map.isEmpty()){
+        Iterator<Entry<Integer,Integer>> i = map.entrySet().iterator();
+        while(i.hasNext()){
+        	Entry<Integer,Integer> e = i.next();
+        	year.add(Double.parseDouble(""+e.getKey()));
+        	entry.add(Double.parseDouble(""+e.getValue()));
+        	
+        }
+        	Object[] yearObj = year.toArray();
+        	Object[] entryObj = entry.toArray();
+        	
+        	double[] yeardouble = new double[yearObj.length];
+        	double[] entrydouble = new double[entryObj.length];
+        	
+        	for(int j = 0; j<yeardouble.length; j++){
+        		yeardouble[j] = Double.parseDouble(""+yearObj[j]);
+        	}
+        	
+        	for(int j = 0; j<entrydouble.length; j++){
+        		entrydouble[j] = Double.parseDouble(""+entryObj[j]);
+
+        	}
+        	
+        	double[][] data = {yeardouble, entrydouble};
+   	 
+        	ds.addSeries(key, data);
+        }
+        }
+            return ds;
+
+	}
+	
 }

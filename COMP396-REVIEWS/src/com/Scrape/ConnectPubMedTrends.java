@@ -69,13 +69,19 @@ public class ConnectPubMedTrends {
 	private void open(String s) throws IOException{
 		Document doc = Jsoup.connect("http://www.ncbi.nlm.nih.gov"+s).userAgent("Chrome").get();
 		Elements el1 = doc.getElementsByClass("timelineData");
-		Elements yearLinks = el1.get(0).getElementsByAttribute("value");
-		
-		for(Element e : yearLinks){
-			valuesByMonth.put(Integer.parseInt(e.attr("value")), Integer.parseInt(e.text()));
+		if(el1.isEmpty()){
+			
+		}
+		else{
+			Elements yearLinks = el1.get(0).getElementsByAttribute("value");
+			
+			for(Element e : yearLinks){
+				valuesByMonth.put(Integer.parseInt(e.attr("value")), Integer.parseInt(e.text()));
+			}
+			
+			generateValuesByYear();
 		}
 		
-		generateValuesByYear();
 	}
 	
 	private void generateValuesByYear(){

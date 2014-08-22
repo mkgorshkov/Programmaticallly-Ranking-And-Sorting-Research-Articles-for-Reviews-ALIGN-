@@ -9,12 +9,12 @@ import java.util.Map.Entry;
 
 import com.ImExport.ImportXML;
 import com.SQL.DatabaseConnector;
+import com.Scrape.ConnectHIndex;
 import com.Scrape.ConnectScholarCited;
-import com.Scrape.ConnectWoK;
 
 public class ImpactFactorFilter {
 	
-	final String CrtYEAR = "2012";
+	final String CrtYEAR = "2014";
 	
 	HashMap<String, ArrayList<String>[]> data;
 	ArrayList<String[]> ranked;
@@ -40,10 +40,8 @@ public class ImpactFactorFilter {
 	private void filter(){
 		Iterator<Entry<String, ArrayList<String>[]>> it = data.entrySet().iterator();
 		it.next();
-		while(it.hasNext()){
-			
-			
-			String[] temp = new String[7];
+		while(it.hasNext()){			
+			String[] temp = new String[14];
 
 			Entry<String, ArrayList<String>[]> e = it.next();
 			
@@ -59,13 +57,27 @@ public class ImpactFactorFilter {
 				atpub = db.getImpactFactor(e.getValue()[1].get(0), pubyear);
 			}
 			
+			//firstAuthor
+			ConnectHIndex h = new ConnectHIndex(e.getValue()[0].get(0));
+			temp[7] = ""+h.hIndex();
+			//LastAuthor
+			ConnectHIndex h2 = new ConnectHIndex(e.getValue()[0].get(e.getValue()[0].size()-1));
+			temp[13] = ""+h2.hIndex();
+			
 			ConnectScholarCited j = new ConnectScholarCited(
 					e.getKey());
 			if(j.getCitations() == -1){
 				temp[6] = "Not Available";
+				temp[12] = "Not Available";
 			}else{
 				temp[6] = ""+j.getCitations();
+				int yearDif = (Integer.parseInt(CrtYEAR) - Integer.parseInt(pubyear));
+				if (yearDif < 1){
+					yearDif = 1;
+				}
+				temp[12] = "" + Double.parseDouble(""+j.getCitations())/Double.parseDouble(""+yearDif);
 			}
+			
 			
 			temp[5] = e.getValue()[2].toString();
 			
@@ -114,12 +126,53 @@ public class ImpactFactorFilter {
 			System.out.println("Rank "+(i+1));
 			System.out.println(ranked.get(i)[1]);
 			System.out.println(ranked.get(i)[2]);
+			ranked.get(i)[8] = calcPercentile(ranked.get(i)[2], ranked, 2);
+
 			System.out.println(ranked.get(i)[3]);
+			ranked.get(i)[9] = calcPercentile(ranked.get(i)[3], ranked, 3);
+
 			System.out.println(ranked.get(i)[4]);
+			
 			System.out.println(ranked.get(i)[6]);
+			ranked.get(i)[10] = calcPercentile(ranked.get(i)[6], ranked, 6);
+
+			System.out.println(ranked.get(i)[7]);
+			ranked.get(i)[11] = calcPercentile(ranked.get(i)[7], ranked, 7);
 
 			System.out.println();
 		}
+	}
+	
+	private String calcPercentile(String current, ArrayList<String[]> input, int id){
+		String toReturn = "Not available";
+		try{
+			double total = 0;
+			double currentD = Double.parseDouble(current);
+			int below = 0;
+			int equal = 0;
+			
+			for (int i = 0; i < input.size(); i++) {
+				try{
+					Double.parseDouble(input.get(i)[id]);
+					if(Double.parseDouble(input.get(i)[id]) == currentD){
+						equal++;
+					}else if(Double.parseDouble(input.get(i)[id]) < currentD){
+						below++;
+					}
+				}catch(java.lang.NumberFormatException e){
+					
+				}
+				
+			}
+			
+			toReturn = "";
+			toReturn = ""+((below + 0.5*equal)/input.size())*100;
+			
+			return toReturn;
+		}catch(java.lang.NumberFormatException e){
+			
+		}
+		return toReturn;
 	}
 	
 	/**

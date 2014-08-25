@@ -11,10 +11,12 @@ import com.ImExport.ImportXML;
 import com.SQL.DatabaseConnector;
 import com.Scrape.ConnectHIndex;
 import com.Scrape.ConnectScholarCited;
+import com.Test.GetSpecificIFPercentile;
 
 public class ImpactFactorFilter {
 	
-	final String CrtYEAR = "2014";
+	final String CrtYEAR = "2012";
+	final String CrtYEARCitationYear = "2014";
 	
 	HashMap<String, ArrayList<String>[]> data;
 	ArrayList<String[]> ranked;
@@ -41,7 +43,7 @@ public class ImpactFactorFilter {
 		Iterator<Entry<String, ArrayList<String>[]>> it = data.entrySet().iterator();
 		it.next();
 		while(it.hasNext()){			
-			String[] temp = new String[14];
+			String[] temp = new String[16];
 
 			Entry<String, ArrayList<String>[]> e = it.next();
 			
@@ -57,12 +59,22 @@ public class ImpactFactorFilter {
 				atpub = db.getImpactFactor(e.getValue()[1].get(0), pubyear);
 			}
 			
+			
+			
 			//firstAuthor
 			ConnectHIndex h = new ConnectHIndex(e.getValue()[0].get(0));
 			temp[7] = ""+h.hIndex();
 			//LastAuthor
 			ConnectHIndex h2 = new ConnectHIndex(e.getValue()[0].get(e.getValue()[0].size()-1));
 			temp[13] = ""+h2.hIndex();
+			
+			GetSpecificIFPercentile g = new GetSpecificIFPercentile(e.getValue()[1].get(1), pubyear);
+			 temp[14] = ""+g.gethIndex();
+			 temp[2] = ""+g.getRanking();
+			
+			GetSpecificIFPercentile g2 = new GetSpecificIFPercentile(e.getValue()[1].get(1), CrtYEAR);
+			temp[15] = ""+g2.gethIndex();
+			temp[3] = ""+g2.getRanking();
 			
 			ConnectScholarCited j = new ConnectScholarCited(
 					e.getKey());
@@ -71,7 +83,7 @@ public class ImpactFactorFilter {
 				temp[12] = "Not Available";
 			}else{
 				temp[6] = ""+j.getCitations();
-				int yearDif = (Integer.parseInt(CrtYEAR) - Integer.parseInt(pubyear));
+				int yearDif = (Integer.parseInt(CrtYEARCitationYear) - Integer.parseInt(pubyear));
 				if (yearDif < 1){
 					yearDif = 1;
 				}
@@ -126,10 +138,10 @@ public class ImpactFactorFilter {
 			System.out.println("Rank "+(i+1));
 			System.out.println(ranked.get(i)[1]);
 			System.out.println(ranked.get(i)[2]);
-			ranked.get(i)[8] = calcPercentile(ranked.get(i)[2], ranked, 2);
-
-			System.out.println(ranked.get(i)[3]);
-			ranked.get(i)[9] = calcPercentile(ranked.get(i)[3], ranked, 3);
+//			ranked.get(i)[8] = calcPercentile(ranked.get(i)[2], ranked, 2);
+//
+//			System.out.println(ranked.get(i)[3]);
+//			ranked.get(i)[9] = calcPercentile(ranked.get(i)[3], ranked, 3);
 
 			System.out.println(ranked.get(i)[4]);
 			

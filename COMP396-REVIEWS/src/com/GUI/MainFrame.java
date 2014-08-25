@@ -370,9 +370,11 @@ public class MainFrame extends JFrame {
 
 			model.addColumn("Title");
 			model.addColumn("Impact Factor (Current)");
-			model.addColumn("IF Current Perc.");
+			model.addColumn("Current Ranking");
+			model.addColumn("Current HIndex");
 			model.addColumn("Impact Factor (Publication)");
-			model.addColumn("IF Publication Perc.");
+			model.addColumn("Publication Ranking");
+			model.addColumn("Publication HIndex");
 			model.addColumn("Impact Factor (Change)");
 			model.addColumn("Citations");
 			model.addColumn("Citations/Year Avg.");
@@ -381,8 +383,8 @@ public class MainFrame extends JFrame {
 			model.addColumn("H-Index Last Author");			
 			
 			for (int i = 0; i < populateTable.size(); i++) {
-				String[] temp = {populateTable.get(i)[1], populateTable.get(i)[2], 
-						populateTable.get(i)[8], populateTable.get(i)[3], 
+				String[] temp = {populateTable.get(i)[1], populateTable.get(i)[3], populateTable.get(i)[15],
+						populateTable.get(i)[8], populateTable.get(i)[2], populateTable.get(i)[14],
 						populateTable.get(i)[9], populateTable.get(i)[4], 
 						populateTable.get(i)[6], populateTable.get(i)[12], 
 						populateTable.get(i)[10], populateTable.get(i)[7], 

@@ -25,55 +25,78 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYDataset;
 
+/**
+ * Generate a plot of the number of papers published with a specific keyword
+ * since the first recorded use to the current date.
+ * 
+ * @author Maxim Gorshkov
+ *
+ */
 public class PubmedGraphs {
-	JDialog googletrends;
-	JDialog pickTrends;
-	JFreeChart chart;
-	ChartPanel cp;
-	XYDataset ds;
-	String[] inputs;
+	private JDialog pTrendsDialog;
+	private JDialog pPickTrends;
+	private JFreeChart pChart;
+	private ChartPanel pChartPanel;
+	private XYDataset pDataset;
+	private String[] pInputs;
 
+	/**
+	 * Constrcutor taking in the keywords.
+	 * @param input - String
+	 */
 	public PubmedGraphs(String input) {
 		pubmedTrends(input);
 	}
 	
+	/**
+	 * Reload the graphs once user has chosen filtered keywords.
+	 * @param input - String
+	 */
 	private void reload(String input){
-		googletrends.removeAll();
-		googletrends.setVisible(false);
-		pickTrends.removeAll();
-		pickTrends.setVisible(false);
+		pTrendsDialog.removeAll();
+		pTrendsDialog.setVisible(false);
+		pPickTrends.removeAll();
+		pPickTrends.setVisible(false);
 		
 		pubmedTrends(input);
 	}
 
+	/**
+	 * Make the dialog from the dataset
+	 * @param input - String.
+	 */
 	private void pubmedTrends(String input) {
-		googletrends = new JDialog();
-		googletrends.setTitle("PubMed Keyword Trends");
+		pTrendsDialog = new JDialog();
+		pTrendsDialog.setTitle("PubMed Keyword Trends");
 
-		ds = createDataset(input);
-		// JFreeChart chart = ChartFactory.createBarChart("Keyword Trends",
-		// "Year", "No Papers Published", (CategoryDataset) ds);
-		chart = ChartFactory.createXYLineChart("Keyword Trends",
-				"Year", "No. Papers with Keyword", ds,
+		pDataset = createDataset(input);
+	
+		pChart = ChartFactory.createXYLineChart("Keyword Trends",
+				"Year", "No. Papers with Keyword", pDataset,
 				PlotOrientation.VERTICAL, true, true, false);
 		
-		cp = new ChartPanel(chart);
-		cp.setPopupMenu(setPopup());
+		pChartPanel = new ChartPanel(pChart);
+		pChartPanel.setPopupMenu(setPopup());
 
-		googletrends.add(cp);
-		googletrends.pack();
-		googletrends.setSize(600, 400);
-		googletrends.setLocationRelativeTo(null);
-		googletrends.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		googletrends.setVisible(true);
+		pTrendsDialog.add(pChartPanel);
+		pTrendsDialog.pack();
+		pTrendsDialog.setSize(600, 400);
+		pTrendsDialog.setLocationRelativeTo(null);
+		pTrendsDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		pTrendsDialog.setVisible(true);
 	}
 
+	/**
+	 * Create the dataset from the keywords.
+	 * @param input - String
+	 * @return XYDataset
+	 */
 	private XYDataset createDataset(String input) {
-		inputs = input.split(", ");
+		pInputs = input.split(", ");
 
 		DefaultXYDataset ds = new DefaultXYDataset();
 
-		for (String key : inputs) {
+		for (String key : pInputs) {
 			ArrayList<Double> year = new ArrayList<Double>();
 			ArrayList<Double> entry = new ArrayList<Double>();
 
@@ -111,6 +134,10 @@ public class PubmedGraphs {
 
 	}
 	
+	/**
+	 * Set popup with prompt to let user select subset of keywords.
+	 * @return JPopupMenu
+	 */
 	public JPopupMenu setPopup(){
 		JPopupMenu m = new JPopupMenu();
 		JMenuItem select = new JMenuItem("Select Keywords to Display");
@@ -130,17 +157,20 @@ public class PubmedGraphs {
 		return m;
 	}
 	
+	/**
+	 * Build the selection menu for the subset of keywords.
+	 */
 	public void toSelectMenu(){
-		pickTrends = new JDialog();
-		pickTrends.setTitle("Pick Trends to Show");
+		pPickTrends = new JDialog();
+		pPickTrends.setTitle("Pick Trends to Show");
 		final JButton button = new JButton("Re-draw");
 		JPanel content = new JPanel();
 		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 
-		final JCheckBox[] options = new JCheckBox[ds.getSeriesCount()];
-		for(int i = 0; i<ds.getSeriesCount(); i++){
-			System.out.println(ds.getSeriesKey(i).toString());
-			options[i] = new JCheckBox(ds.getSeriesKey(i).toString());
+		final JCheckBox[] options = new JCheckBox[pDataset.getSeriesCount()];
+		for(int i = 0; i<pDataset.getSeriesCount(); i++){
+			System.out.println(pDataset.getSeriesKey(i).toString());
+			options[i] = new JCheckBox(pDataset.getSeriesKey(i).toString());
 			content.add(options[i]);
 		}
 		content.add(Box.createVerticalStrut(15));
@@ -162,16 +192,13 @@ public class PubmedGraphs {
 			
 		});
 		
-		pickTrends.add(new JScrollPane(content));
-		pickTrends.pack();
-		pickTrends.setSize(200, 200);
-		pickTrends.setLocationRelativeTo(null);
-		pickTrends.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		pickTrends.setVisible(true);
+		pPickTrends.add(new JScrollPane(content));
+		pPickTrends.pack();
+		pPickTrends.setSize(200, 200);
+		pPickTrends.setLocationRelativeTo(null);
+		pPickTrends.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		pPickTrends.setVisible(true);
 				
 	}
 
-	public static void main(String[] args) {
-		PubmedGraphs g = new PubmedGraphs("Hypertension, Stroke, Insomnia");
-	}
 }

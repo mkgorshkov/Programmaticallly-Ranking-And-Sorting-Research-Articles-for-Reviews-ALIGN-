@@ -20,9 +20,9 @@ import java.util.Date;
  */
 public class DatabaseConnector {
 
-	private String dbURL = "jdbc:sqlite:./db/ALIGNED.db";
-	private Connection conn;
-	private Statement stmt;
+	private String pDatabaseURL = "jdbc:sqlite:./db/ALIGNED.db";
+	private Connection pConnection;
+	private Statement pStatement;
 
 	/**
 	 * Constructor.
@@ -39,11 +39,11 @@ public class DatabaseConnector {
 		try {
 			Class.forName("org.sqlite.JDBC");
 
-			conn = DriverManager.getConnection(dbURL);
+			pConnection = DriverManager.getConnection(pDatabaseURL);
 
-			if (conn != null) {
+			if (pConnection != null) {
 
-				stmt = conn.createStatement();
+				pStatement = pConnection.createStatement();
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -64,7 +64,7 @@ public class DatabaseConnector {
 	public ResultSet execute(String query) {
 		ResultSet rs = null;
 		try {
-			rs = stmt.executeQuery("Select * from Users");
+			rs = pStatement.executeQuery("Select * from Users");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -77,7 +77,7 @@ public class DatabaseConnector {
 	 */
 	public void closeConnection() {
 		try {
-			conn.close();
+			pConnection.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -94,7 +94,7 @@ public class DatabaseConnector {
 		ArrayList<String> rsList = new ArrayList<String>();
 
 		try {
-			rs = stmt.executeQuery("Select * from Users");
+			rs = pStatement.executeQuery("Select * from Users");
 			while (rs.next()) {
 				rsList.add(rs.getString(2));
 			}
@@ -121,7 +121,7 @@ public class DatabaseConnector {
 		ResultSet rs = null;
 
 		try {
-			rs = stmt.executeQuery("Select * from Projects WHERE UserFK='"
+			rs = pStatement.executeQuery("Select * from Projects WHERE UserFK='"
 					+ user + "'");
 			while (rs.next()) {
 				String[] temp = new String[3];
@@ -151,7 +151,7 @@ public class DatabaseConnector {
 		ResultSet rs = null;
 		
 		try {
-			rs = stmt.executeQuery("Select ImpactFactor FROM ImpactFactor WHERE JournalAbbr = '"+s+"' AND JournalYear = '"+y+"'");
+			rs = pStatement.executeQuery("Select ImpactFactor FROM ImpactFactor WHERE JournalAbbr = '"+s+"' AND JournalYear = '"+y+"'");
 			while (rs.next()) {
 				d = rs.getDouble(1);
 			}
@@ -170,7 +170,7 @@ public class DatabaseConnector {
 	 */
 	public boolean addImpactFactors(String s, String year, Double d){
 		try {
-			stmt.execute("INSERT INTO ImpactFactor VALUES (null,'" + s + "','" + year + "',"+d+")");
+			pStatement.execute("INSERT INTO ImpactFactor VALUES (null,'" + s + "','" + year + "',"+d+")");
 			return true;
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -191,7 +191,7 @@ public class DatabaseConnector {
 		String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
 
 		try {
-			stmt.execute("INSERT INTO Projects VALUES (null,'" + projName
+			pStatement.execute("INSERT INTO Projects VALUES (null,'" + projName
 					+ "','" + date + "','" + user + "')");
 			return true;
 		} catch (SQLException e) {
@@ -210,7 +210,7 @@ public class DatabaseConnector {
 	public boolean deleteProject(String projName, String user) {
 		
 		try {
-			stmt.execute("DELETE from Projects WHERE ProjectName = '" + projName + "' AND UserFK = '"+user+"'");
+			pStatement.execute("DELETE from Projects WHERE ProjectName = '" + projName + "' AND UserFK = '"+user+"'");
 			return true;
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -230,7 +230,7 @@ public class DatabaseConnector {
 		ResultSet rs;
 		
 		try {
-			rs = stmt.executeQuery("Select Path FROM Files WHERE User = '"+user+"' AND Project = '"+project+"'");
+			rs = pStatement.executeQuery("Select Path FROM Files WHERE User = '"+user+"' AND Project = '"+project+"'");
 			while (rs.next()) {
 				filename = rs.getString(1);
 			}
@@ -251,7 +251,7 @@ public class DatabaseConnector {
 	public boolean addXML(String user, String description, String project, String file) {
 
 		try {
-			stmt.execute("INSERT INTO FILES VALUES (null,'" + file
+			pStatement.execute("INSERT INTO FILES VALUES (null,'" + file
 					+ "','" + description +"','" + user + "','" + project + "')");
 			return true;
 		} catch (SQLException e) {
@@ -259,8 +259,4 @@ public class DatabaseConnector {
 			return false;
 		}
 	}
-//	public static void main(String[] args) {
-//		DatabaseConnector a = new DatabaseConnector();
-//		System.out.println(a.getImpactFactor("TRIALS"));
-//	}
 }

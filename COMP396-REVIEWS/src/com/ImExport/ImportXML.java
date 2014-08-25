@@ -11,34 +11,49 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+/**
+ * Parse XML data into information that is useful to ALIGN.
+ * @author Maxim Gorshkov
+ *
+ */
 public class ImportXML {
-	File f;
-	HashMap<String, ArrayList<String>[]> records;
+	//Input file.
+	private File pFile;
+	//Overall records.
+	private HashMap<String, ArrayList<String>[]> pRecords;
 	
-	String title = "";
-	ArrayList<String> authors = new ArrayList<String>();
-	ArrayList<String> journals = new ArrayList<String>();
-	ArrayList<String> keywords = new ArrayList<String>();
-	ArrayList<String> year = new ArrayList<String>();
+	//Broken up data as lists.
+	private ArrayList<String> pAuthors = new ArrayList<String>();
+	private ArrayList<String> pJournals = new ArrayList<String>();
+	private ArrayList<String> pKeywords = new ArrayList<String>();
+	private ArrayList<String> pYear = new ArrayList<String>();
 	
+	/**
+	 * Constructor. 
+	 * @param fileName - String representing the full file path as input.
+	 */
 	public ImportXML(String fileName) {
-		f = new File(fileName);
-		records = new HashMap<String, ArrayList<String>[]>();
+		pFile = new File(fileName);
+		pRecords = new HashMap<String, ArrayList<String>[]>();
 		parse();
 	}
 
+	/**
+	 * Connect to file and parse data into a temporary document that can later
+	 * be broken into necessary categories.
+	 */
 	private void parse() {
 		try {
 
 			DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance()
 					.newDocumentBuilder();
 
-			Document doc = dBuilder.parse(f);
+			Document doc = dBuilder.parse(pFile);
 
 
 			if (doc.hasChildNodes()) {
 
-				printNote(doc.getChildNodes());
+				parseNode(doc.getChildNodes());
 
 			}
 
@@ -48,8 +63,15 @@ public class ImportXML {
 		
 	}
 
-	private void printNote(NodeList nodeList) {
-		
+	/**
+	 * More specific parsing function where nodes are parsed into the specific categories
+	 * of Authors/Journals/Keywords/Year.
+	 * 
+	 * @param nodeList - List of Nodes from XML input file.
+	 */
+	@SuppressWarnings("unchecked")
+	private void parseNode(NodeList nodeList) {
+		String title = "";
 
 		for (int count = 0; count < nodeList.getLength(); count++) {
 
@@ -59,39 +81,40 @@ public class ImportXML {
 			if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
 
 				if(tempNode.getNodeName().equals("record")){
-					ArrayList[] temp = {authors, journals, keywords, year};
-					records.put(title, temp);
+					@SuppressWarnings("rawtypes")
+					ArrayList[] temp = {pAuthors, pJournals, pKeywords, pYear};
+					pRecords.put(title, temp);
 					
 					title = "";
 					
-					authors = new ArrayList<String>();
-					journals = new ArrayList<String>();
-					keywords = new ArrayList<String>();
-					year = new ArrayList<String>();
+					pAuthors = new ArrayList<String>();
+					pJournals = new ArrayList<String>();
+					pKeywords = new ArrayList<String>();
+					pYear = new ArrayList<String>();
 				}
 				if(tempNode.getNodeName().equals("author")){
-					authors.add(tempNode.getTextContent());
+					pAuthors.add(tempNode.getTextContent());
 				}
 				if(tempNode.getNodeName().equals("title")){
 					title = tempNode.getTextContent();
 				}
 				if(tempNode.getNodeName().equals("secondary-title")){
-					journals.add(tempNode.getTextContent());
+					pJournals.add(tempNode.getTextContent());
 				}
 				if(tempNode.getNodeName().equals("alt-title")){
-					journals.add(tempNode.getTextContent());
+					pJournals.add(tempNode.getTextContent());
 				}
 				if(tempNode.getNodeName().equals("keyword")){
-					keywords.add(tempNode.getTextContent());
+					pKeywords.add(tempNode.getTextContent());
 
 				}
 				if(tempNode.getNodeName().equals("year")){
-					year.add(tempNode.getTextContent());
+					pYear.add(tempNode.getTextContent());
 				}
 
 				if (tempNode.hasChildNodes()) {
 					// loop again if has child nodes
-					printNote(tempNode.getChildNodes());
+					parseNode(tempNode.getChildNodes());
 
 				}
 
@@ -100,12 +123,27 @@ public class ImportXML {
 		}
 	}
 	
+	/**
+	 * Access point to the dataset of the XML file.
+	 * 
+	 * Expected keys:
+	 * 	String [Title of Paper]
+	 * Expected values:
+	 * 	ArrayList<String> authors
+	 * 		List of authors
+	 *  ArrayList<String> journals
+	 *  	Short title of Journal, Full title of Journal
+	 *  ArrayList<String> keywords
+	 *  	List of keywords
+	 *  ArrayList<String> year
+	 *  	Year
+	 * 
+	 * @return HashMap<String, ArrayList<String>[]>
+	 * 
+	 */
+	@SuppressWarnings("unchecked")
 	public HashMap<String, ArrayList<String>[]> returnData(){
-		return (HashMap<String, ArrayList<String>[]>) records.clone();
+		return (HashMap<String, ArrayList<String>[]>) pRecords.clone();
 	}
 
-//	public static void main(String[] args) {
-//		ImportXML x = new ImportXML("./res/TestLibrary.xml");
-//		
-//	}
 }

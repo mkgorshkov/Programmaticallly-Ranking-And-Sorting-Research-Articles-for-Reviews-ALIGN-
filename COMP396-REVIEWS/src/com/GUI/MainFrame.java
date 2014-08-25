@@ -52,7 +52,7 @@ import org.jfree.data.xy.XYDataset;
 import com.CMD.ImpactFactorFilter;
 import com.SQL.DatabaseConnector;
 import com.Scrape.ConnectPubMedTrends;
-import com.Test.TestPubmedGraphs;
+import com.Scrape.PubmedGraphs;
 
 /**
  * Main window responsible for being the main container.
@@ -355,7 +355,7 @@ public class MainFrame extends JFrame {
 				      if(!url.isEmpty()){
 				    	statusLabel.setText("Loading Graph!");
 						//pubmedTrends(url);
-				    	TestPubmedGraphs g = new TestPubmedGraphs(url);
+				    	PubmedGraphs g = new PubmedGraphs(url);
 				      }else{
 				    	statusLabel.setText("Graph could not be loaded.");
 				      }

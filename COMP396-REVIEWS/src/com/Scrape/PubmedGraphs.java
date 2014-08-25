@@ -1,4 +1,4 @@
-package com.Test;
+package com.Scrape;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,9 +25,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYDataset;
 
-import com.Scrape.ConnectPubMedTrends;
-
-public class TestPubmedGraphs {
+public class PubmedGraphs {
 	JDialog googletrends;
 	JDialog pickTrends;
 	JFreeChart chart;
@@ -35,7 +33,7 @@ public class TestPubmedGraphs {
 	XYDataset ds;
 	String[] inputs;
 
-	public TestPubmedGraphs(String input) {
+	public PubmedGraphs(String input) {
 		pubmedTrends(input);
 	}
 	
@@ -174,6 +172,6 @@ public class TestPubmedGraphs {
 	}
 
 	public static void main(String[] args) {
-		TestPubmedGraphs g = new TestPubmedGraphs("Hypertension, Stroke, Insomnia");
+		PubmedGraphs g = new PubmedGraphs("Hypertension, Stroke, Insomnia");
 	}
 }

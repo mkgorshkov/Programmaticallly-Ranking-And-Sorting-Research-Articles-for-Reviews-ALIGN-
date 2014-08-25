@@ -11,7 +11,7 @@ import com.ImExport.ImportXML;
 import com.SQL.DatabaseConnector;
 import com.Scrape.ConnectHIndex;
 import com.Scrape.ConnectScholarCited;
-import com.Test.GetSpecificIFPercentile;
+import com.Scrape.GetSpecificIFPercentile;
 
 public class ImpactFactorFilter {
 	

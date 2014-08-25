@@ -63,10 +63,10 @@ public class ImpactFactorFilter {
 			
 			//firstAuthor
 			ConnectHIndex h = new ConnectHIndex(e.getValue()[0].get(0));
-			temp[7] = ""+h.hIndex();
+			temp[7] = ""+h.getHIndex();
 			//LastAuthor
 			ConnectHIndex h2 = new ConnectHIndex(e.getValue()[0].get(e.getValue()[0].size()-1));
-			temp[13] = ""+h2.hIndex();
+			temp[13] = ""+h2.getHIndex();
 			
 			GetIFRankInField g = new GetIFRankInField(e.getValue()[1].get(1), pubyear);
 			 temp[14] = ""+g.gethIndex();

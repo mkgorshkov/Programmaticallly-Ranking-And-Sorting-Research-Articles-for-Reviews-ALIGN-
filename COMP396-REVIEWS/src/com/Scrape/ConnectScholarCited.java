@@ -27,51 +27,62 @@ import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
 import com.gargoylesoftware.htmlunit.html.HtmlTableRow;
 import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
 
+/**
+ * Retrieve the number of citations for a specific paper by retrieving data from Google Scholar.
+ * @author Maxim Gorshkov
+ *
+ */
 public class ConnectScholarCited {
-	String title;
-	int totalJournals;
-	int citations;
+	private String pTitle;
+	private int pCitations;
 
-	// DatabaseConnector db;
-
-	public ConnectScholarCited(String t) {
-		title = t;
-		citations = -1;
-		// db = new DatabaseConnector();
+	/**
+	 * Constructor. As input, the title of the paper is taken.
+	 * @param titleInput
+	 */
+	public ConnectScholarCited(String titleInput) {
+		pTitle = titleInput;
+		pCitations = -1;
 
 		try {
 			search();
 		} catch (FailingHttpStatusCodeException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		System.out.println(citations);
 	}
 
+	/**
+	 * Search for entry on Google Scholar.
+	 * @throws FailingHttpStatusCodeException
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 */
 	private void search() throws FailingHttpStatusCodeException,
 			MalformedURLException, IOException {
 
-		HtmlPage home = null;
 
-		String titleBroken = title;
+		String titleBroken = pTitle;
 		titleBroken = titleBroken.replace(" ", "+");
 		
 		Document doc = Jsoup.connect("http://scholar.google.ca/scholar?q="
 				+ titleBroken + "&as_sdt=1").userAgent("Chrome").get();
-		// System.out.println(home.asText());
 
-		// final String pageAsText = home.asText();
 		accessForm(doc);
 
 	}
 
+	/**
+	 * As long as there is a match, continue to parse the returned rows.
+	 * @param home - Document
+	 * @throws FailingHttpStatusCodeException
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 */
 	private void accessForm(Document home)
 			throws FailingHttpStatusCodeException, MalformedURLException,
 			IOException {
@@ -84,27 +95,30 @@ public class ConnectScholarCited {
 		
 	}
 	
-	private void process (String a, String b){
-		if(a.contains(title.toUpperCase())){
-			if(b.contains("CITED BY ")){
-			int index = b.indexOf("CITED BY ") + 9;
-			int spaceIndex = b.indexOf(" ", index);
-			citations = Integer.parseInt(b.substring(index,spaceIndex));
+	/**
+	 * If the title is a perfect match, parse how many citations the paper has.
+	 * @param stringInput String
+	 * @param titleToCheck String
+	 */
+	private void process (String stringInput, String titleToCheck){
+		if(stringInput.contains(pTitle.toUpperCase())){
+			if(titleToCheck.contains("CITED BY ")){
+			int index = titleToCheck.indexOf("CITED BY ") + 9;
+			int spaceIndex = titleToCheck.indexOf(" ", index);
+			pCitations = Integer.parseInt(titleToCheck.substring(index,spaceIndex));
 			}else{
-				citations = 0;
+				pCitations = 0;
 			}
 		}
 		
 	}
 	
+	/**
+	 * Returns the number of citations for current paper.
+	 * @return Integer.
+	 */
 	public int getCitations() {
-		return citations;
+		return pCitations;
 	}
 
-//	public static void main(String[] args) {
-//		long start = System.currentTimeMillis();
-//		ConnectScholarCited j = new ConnectScholarCited(
-//				"Identifying the vulnerable patient with rupture-prone plaque");
-//		System.out.println(System.currentTimeMillis() - start);
-//	}
 }

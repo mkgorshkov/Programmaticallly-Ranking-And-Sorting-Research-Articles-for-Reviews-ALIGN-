@@ -21,50 +21,57 @@ import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
 
+/**
+ * Retrieves the H-Index of a specific researcher based on the first and last name.
+ * @author Maxim Gorshkov
+ *
+ */
 public class ConnectHIndex {
-	String author;
-	String affiliation;
-	WebClient client;
-	int hIndex;
-	
+	private String pAuthor;
+	private WebClient pClient;
+	private int pHIndex;
 
-	// DatabaseConnector db;
-
+	/**
+	 * Constructor. Takes as input the full name of an author.
+	 * @param auth - String.
+	 */
 	public ConnectHIndex(String auth) {
-		author = auth;
-		client = new WebClient();
+		pAuthor = auth;
+		pClient = new WebClient();
 		
 		try {
 			search();
 		} catch (FailingHttpStatusCodeException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 	}
 
+	/**
+	 * Open the main webpage and fill out the form, inputting the full author name.
+	 * @throws FailingHttpStatusCodeException
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 */
 	private void search() throws FailingHttpStatusCodeException,
 			MalformedURLException, IOException {
 
-		client.getOptions().setThrowExceptionOnScriptError(false);
-		HtmlPage home = client.getPage("http://www.scopus.com/search/form/authorFreeLookup.url");
+		pClient.getOptions().setThrowExceptionOnScriptError(false);
+		HtmlPage home = pClient.getPage("http://www.scopus.com/search/form/authorFreeLookup.url");
 		HtmlTextInput text1 = (HtmlTextInput) home.getByXPath("//*[@id=\"lastname\"]").get(0);
 		HtmlTextInput text2 = (HtmlTextInput) home.getByXPath("//*[@id=\"firstname\"]").get(0);
-//		HtmlTextInput text3 = (HtmlTextInput) home.getByXPath("//*[@id=\"institute\"]").get(0);
 		
-		int index = author.indexOf(", ");
+		int index = pAuthor.indexOf(", ");
 		
-		text1.type(author.substring(0, index));
-		text2.type(author.substring(index+2, index+3));
+		text1.type(pAuthor.substring(0, index));
+		text2.type(pAuthor.substring(index+2, index+3));
 		
 		if(home.getByXPath("//*[@id=\"authorFreeLookSearh\"]/div[4]/div/input[2]").get(0).equals("")){
-			hIndex = -1;
+			pHIndex = -1;
 		}else{
 		HtmlPage newPage = ((HtmlInput) home.getByXPath("//*[@id=\"authorFreeLookSearh\"]/div[4]/div/input[2]").get(0)).click();
 		process(newPage);
@@ -72,28 +79,31 @@ public class ConnectHIndex {
 		
 	}
 	
+	/**
+	 * As long as the author exists, continue to the personal profile. Retrieve the  H-Index.
+	 * @param page - HtmlPage
+	 * @throws IOException
+	 */
 	private void process(HtmlPage page) throws IOException{
 		if(page.getByXPath("//*[@id=\"resultDataRow1\"]/div[2]/div[1]/a").size() == 0){
-			hIndex = -1;
+			pHIndex = -1;
 		}else{
 		HtmlAnchor select = (HtmlAnchor) page.getByXPath("//*[@id=\"resultDataRow1\"]/div[2]/div[1]/a").get(0);
 		HtmlPage newPage = select.click();
 		HtmlDivision div = (HtmlDivision) newPage.getByXPath("//*[@id=\"ulLeftList\"]/li[3]/div[2]/div").get(0);
 			if(div.getTextContent().substring(0, div.getTextContent().indexOf("\n")).equals("")){
-				hIndex = -1;
+				pHIndex = -1;
 			}else{
-			hIndex = Integer.parseInt(div.getTextContent().substring(0, div.getTextContent().indexOf("\n")));
+			pHIndex = Integer.parseInt(div.getTextContent().substring(0, div.getTextContent().indexOf("\n")));
 			}
 		}
 	}
 
-	public int hIndex(){
-		return hIndex;
+	/**
+	 * Returns the H-Index of the author.
+	 * @return Integer.
+	 */
+	public int getHIndex(){
+		return pHIndex;
 	}
-//	public static void main(String[] args) {
-//		long start = System.currentTimeMillis();
-//		ConnectHIndex j = new ConnectHIndex(
-//				"Daskalopoulou, S.");
-//		System.out.println(System.currentTimeMillis() - start);
-//	}
 }

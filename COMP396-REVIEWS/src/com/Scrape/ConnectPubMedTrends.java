@@ -13,49 +13,58 @@ import org.jsoup.select.Elements;
 
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.WebClient;
-
+/**
+ * Scrape the PubMed website for specific keywords, reconstructing the data related to published papers with a specific keyword.
+ * @author Maxim Gorshkov
+ *
+ */
 public class ConnectPubMedTrends {
-	String keyword;
-	WebClient webClient;
-	HashMap<Integer, Integer> valuesByMonth;
-	HashMap<Integer, Integer> valuesByYear;
-	int totalJournals;
-	int citations;
+	private String pKeyword;
+	private HashMap<Integer, Integer> pValuesByMonth;
+	private HashMap<Integer, Integer> pValuesByYear;
 
-	// DatabaseConnector db;
-
-	public ConnectPubMedTrends(String k) {
-		keyword = k;
-		valuesByMonth = new HashMap<Integer, Integer>();
-		valuesByYear = new HashMap<Integer, Integer>();
+	/**
+	 * Constructor. Takes in the  list of keywords as a comma seperated String.
+	 * @param keywordInput
+	 */
+	public ConnectPubMedTrends(String keywordInput) {
+		pKeyword = keywordInput;
+		pValuesByMonth = new HashMap<Integer, Integer>();
+		pValuesByYear = new HashMap<Integer, Integer>();
 		try {
 			search();
 		} catch (FailingHttpStatusCodeException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		System.out.println(valuesByMonth);
-		System.out.println(valuesByYear);
-
 	}
 
+	/**
+	 * Retrieves the main webpage with details regarding the specific keywords.
+	 * @throws FailingHttpStatusCodeException
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 */
 	private void search() throws FailingHttpStatusCodeException,
 			MalformedURLException, IOException {
 		
-		keyword = keyword.replace(" ", "+");
+		pKeyword = pKeyword.replace(" ", "+");
 
-		Document doc = Jsoup.connect("http://www.ncbi.nlm.nih.gov/pubmed/?term="+keyword).userAgent("Chrome").get();
+		Document doc = Jsoup.connect("http://www.ncbi.nlm.nih.gov/pubmed/?term="+pKeyword).userAgent("Chrome").get();
 		process(doc);
 
 	}
 
+	/**
+	 * Find the JavaScript entry for the reconstruction of the data.
+	 * @param doc
+	 * @throws FailingHttpStatusCodeException
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 */
 	private void process(Document doc)
 			throws FailingHttpStatusCodeException, MalformedURLException,
 			IOException {
@@ -66,8 +75,14 @@ public class ConnectPubMedTrends {
 		open(a.get("href"));
 	}
 	
-	private void open(String s) throws IOException{
-		Document doc = Jsoup.connect("http://www.ncbi.nlm.nih.gov"+s).userAgent("Chrome").get();
+	/**
+	 * Opens the timeline with the specific values for each month since the first paper until the most current with the keyword.
+	 * Generates the month-to-month values for each keyword.
+	 * @param specificKeyword
+	 * @throws IOException
+	 */
+	private void open(String specificKeyword) throws IOException{
+		Document doc = Jsoup.connect("http://www.ncbi.nlm.nih.gov"+specificKeyword).userAgent("Chrome").get();
 		Elements el1 = doc.getElementsByClass("timelineData");
 		if(el1.isEmpty()){
 			
@@ -76,7 +91,7 @@ public class ConnectPubMedTrends {
 			Elements yearLinks = el1.get(0).getElementsByAttribute("value");
 			
 			for(Element e : yearLinks){
-				valuesByMonth.put(Integer.parseInt(e.attr("value")), Integer.parseInt(e.text()));
+				pValuesByMonth.put(Integer.parseInt(e.attr("value")), Integer.parseInt(e.text()));
 			}
 			
 			generateValuesByYear();
@@ -84,40 +99,44 @@ public class ConnectPubMedTrends {
 		
 	}
 	
+	/**
+	 * Generates the year-to-year values from the month-to-month values.
+	 */
 	private void generateValuesByYear(){
-		Iterator i = valuesByMonth.keySet().iterator();
+		Iterator i = pValuesByMonth.keySet().iterator();
 		int currentYear = 0;
 		int totalValue = 0;
 		while(i.hasNext()){
 			String tempStr = ""+i.next();
 			int temp = Integer.parseInt(tempStr.substring(0, 4));
 			System.out.println(temp);
-			int tempCount = valuesByMonth.get(Integer.parseInt(tempStr));
+			int tempCount = pValuesByMonth.get(Integer.parseInt(tempStr));
 			System.out.println(tempCount);
 
-			if(valuesByYear.containsKey(temp)){
-				int tempValue = valuesByYear.get(temp);
+			if(pValuesByYear.containsKey(temp)){
+				int tempValue = pValuesByYear.get(temp);
 				tempValue += tempCount;
-				valuesByYear.remove(temp);
-				valuesByYear.put(temp, tempValue);
+				pValuesByYear.remove(temp);
+				pValuesByYear.put(temp, tempValue);
 			}else{
-				valuesByYear.put(temp, tempCount);
+				pValuesByYear.put(temp, tempCount);
 			}
 		}
 	}
 
+	/**
+	 * Retrieve the month-to-month dataset.
+	 * @return HashMap<Integer, Integer> for MONTHYEAR, VALUE
+	 */
 	public HashMap<Integer, Integer> getMonthMap() {
-		return valuesByMonth;
+		return pValuesByMonth;
 	}
 	
+	/**
+	 * Retrieve the year-to-year dataset.
+	 * @return HashMap<Integer, Integer> for YEAR, YEAR
+	 */
 	public HashMap<Integer, Integer> getYearMap(){
-		return valuesByYear;
+		return pValuesByYear;
 	}
-
-//	public static void main(String[] args) {
-//		long start = System.currentTimeMillis();
-//		ConnectPubMedTrends j = new ConnectPubMedTrends(
-//				"Aerosol therapy");
-//		System.out.println(System.currentTimeMillis() - start);
-//	}
 }

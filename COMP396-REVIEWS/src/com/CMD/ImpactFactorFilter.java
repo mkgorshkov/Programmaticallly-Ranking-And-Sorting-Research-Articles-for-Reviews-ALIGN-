@@ -11,7 +11,7 @@ import com.ImExport.ImportXML;
 import com.SQL.DatabaseConnector;
 import com.Scrape.ConnectHIndex;
 import com.Scrape.ConnectScholarCited;
-import com.Scrape.GetSpecificIFPercentile;
+import com.Scrape.GetIFRankInField;
 
 public class ImpactFactorFilter {
 	
@@ -68,11 +68,11 @@ public class ImpactFactorFilter {
 			ConnectHIndex h2 = new ConnectHIndex(e.getValue()[0].get(e.getValue()[0].size()-1));
 			temp[13] = ""+h2.hIndex();
 			
-			GetSpecificIFPercentile g = new GetSpecificIFPercentile(e.getValue()[1].get(1), pubyear);
+			GetIFRankInField g = new GetIFRankInField(e.getValue()[1].get(1), pubyear);
 			 temp[14] = ""+g.gethIndex();
 			 temp[2] = ""+g.getRanking();
 			
-			GetSpecificIFPercentile g2 = new GetSpecificIFPercentile(e.getValue()[1].get(1), CrtYEAR);
+			GetIFRankInField g2 = new GetIFRankInField(e.getValue()[1].get(1), CrtYEAR);
 			temp[15] = ""+g2.gethIndex();
 			temp[3] = ""+g2.getRanking();
 			

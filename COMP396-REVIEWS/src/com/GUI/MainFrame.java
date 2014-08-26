@@ -49,9 +49,9 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYDataset;
 
-import com.CMD.ImpactFactorFilter;
 import com.SQL.DatabaseConnector;
 import com.Scrape.ConnectPubMedTrends;
+import com.Scrape.ImputDataOrganizer;
 import com.Scrape.PubmedGraphs;
 
 /**
@@ -61,46 +61,50 @@ import com.Scrape.PubmedGraphs;
  * 
  */
 public class MainFrame extends JFrame {
-
-	JPanel loginScreen = new JPanel();
-	JPanel projectsScreen = new JPanel();
-	JPanel sortingScreen = new JPanel();
-
-	JMenuBar menuBar = new JMenuBar();
-	JMenu menuFile;
-	JMenuItem newProject;
-	JMenuItem exit;
-	JMenuItem exitProjects;
-	JMenuItem manageFiles;
-	JPanel statusPanel = new JPanel();
-	JLabel statusLabel = new JLabel("");
-	JLabel usersLabel = new JLabel("Select User:");
-	JButton connect = new JButton("Connect");
-	JButton newUserCreate = new JButton("New User");
-	JButton addUserButton = new JButton("Add User");
 	
-	JTextField newUserNameName;
-
-	JTable projects;
-	JTable sortingTable;
-
-	JComboBox<String> users;
+	private static final long serialVersionUID = 1L;
 	
-	String projectNameValue;
+	private JMenuBar pMenuBar = new JMenuBar();
+	private JMenu pMenuFile;
+	private JMenuItem pNewProjectItem;
+	private JMenuItem pExitItem;
+	private JMenuItem pExitProjectsItem;
+	private JMenuItem pManageFilesItem;
 	
-	JDialog projectCreate;
-	JDialog uploadFiles;
-	JDialog googletrends;
-	JDialog newUser;
+	private JPanel pLoginScreen = new JPanel();
+	private JPanel pProjectsScreen = new JPanel();
+	private JPanel pSortingScreen = new JPanel();
+	private JPanel pStatusPanel = new JPanel();
 	
-	String sortingXMLFile;
+	private JDialog pProjectCreate;
+	private JDialog pUploadFiles;
+	private JDialog pModifyUser;
 	
-	private DatabaseConnector db;
+	private JLabel pStatusLabel = new JLabel("");
+	private JLabel pUsersLabel = new JLabel("Select User:");
+	
+	private JButton pConnect = new JButton("Connect");
+	private JButton pNewUserCreate = new JButton("Modify User");
+	
+	private JTextField pNewUserNameInput;
 
-	String crtUser;
-	JTextField projectName;
-	JTextField fileDescription;
+	private JTable pProjects;
+	private JTable pSortingTable;
 
+	private JComboBox<String> pUsers;
+	
+	private String pProjectNameValue;
+	private String pSortingXMLFile;
+	
+	private DatabaseConnector pDatabaseConnect;
+
+	private String pCrtUser;
+	private JTextField pProjectName;
+	private JTextField pFileDescription;
+
+	/**
+	 * Constructor. Creates the main screen and calls to set up connection to database and login screen.
+	 */
 	public MainFrame() {
 		makeConnection();
 
@@ -108,55 +112,71 @@ public class MainFrame extends JFrame {
 		setSize(600, 400);
 		setLocationRelativeTo(null);
 
-		loginScreen.add(addGrid());
+		pLoginScreen.add(addGrid());
 		// setMenu();
-		this.setJMenuBar(menuBar);
+		this.setJMenuBar(pMenuBar);
 		setStatus();
-		this.add(loginScreen);
+		this.add(pLoginScreen);
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 
+	/**
+	 * Connects to the internal database.
+	 */
 	private void makeConnection() {
-		db = new DatabaseConnector();
+		pDatabaseConnect = new DatabaseConnector();
 	}
 
+	/**
+	 * Sets the menu on the top bar of the screen.
+	 */
 	private void setMenu() {		
-		menuFile = new JMenu("File");
-		newProject = new JMenuItem("New Project");
-		newProject.addActionListener(new addButtonListener());
-		menuFile.add(newProject);
+		pMenuFile = new JMenu("File");
+		pNewProjectItem = new JMenuItem("New Project");
+		pNewProjectItem.addActionListener(new addButtonListener());
+		pMenuFile.add(pNewProjectItem);
 		
-		exit = new JMenuItem("Exit to Login");
-		exit.addActionListener(new addButtonListener());
-		menuFile.add(exit);
+		pExitItem = new JMenuItem("Exit to Login");
+		pExitItem.addActionListener(new addButtonListener());
+		pMenuFile.add(pExitItem);
 		
-		menuBar.add(menuFile);
+		pMenuBar.add(pMenuFile);
 	}
 	
+	/**
+	 * Sets the frame that manages the sorted and calculated values.
+	 */
 	private void setSortingMenu(){
-		menuFile = new JMenu("File");
-		manageFiles = new JMenuItem("Manage Files");
-		manageFiles.addActionListener(new addButtonListener());
-		menuFile.add(manageFiles);
+		pMenuFile = new JMenu("File");
+		pManageFilesItem = new JMenuItem("Manage Files");
+		pManageFilesItem.addActionListener(new addButtonListener());
+		pMenuFile.add(pManageFilesItem);
 		
-		exitProjects = new JMenuItem("Exit to Projects");
-		exitProjects.addActionListener(new addButtonListener());
-		menuFile.add(exitProjects);
+		pExitProjectsItem = new JMenuItem("Exit to Projects");
+		pExitProjectsItem.addActionListener(new addButtonListener());
+		pMenuFile.add(pExitProjectsItem);
 		
-		menuBar.add(menuFile);
+		pMenuBar.add(pMenuFile);
 	}
 
+	/**
+	 * Sets the status bar on the bottom of the screen.
+	 */
 	private void setStatus() {
-		statusPanel.setBorder(new BevelBorder(BevelBorder.LOWERED));
-		this.add(statusPanel, BorderLayout.SOUTH);
-		statusPanel.setPreferredSize(new Dimension(this.getWidth(), 16));
-		statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.X_AXIS));
-		statusLabel.setText("Successfully connected to Database");
-		statusLabel.setHorizontalAlignment(SwingConstants.LEFT);
-		statusPanel.add(statusLabel);
+		pStatusPanel.setBorder(new BevelBorder(BevelBorder.LOWERED));
+		this.add(pStatusPanel, BorderLayout.SOUTH);
+		pStatusPanel.setPreferredSize(new Dimension(this.getWidth(), 16));
+		pStatusPanel.setLayout(new BoxLayout(pStatusPanel, BoxLayout.X_AXIS));
+		pStatusLabel.setText("Successfully connected to Database");
+		pStatusLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		pStatusPanel.add(pStatusLabel);
 	}
 
+	/**
+	 * Sets the login grid on the front page.
+	 * @return Panel.
+	 */
 	private Panel addGrid() {
 		Panel p = new Panel();
 		p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
@@ -169,19 +189,19 @@ public class MainFrame extends JFrame {
 			p.add(label);
 			p.add(Box.createVerticalStrut(35));
 			label.setAlignmentX(Component.CENTER_ALIGNMENT);
-			p.add(usersLabel);
-			usersLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+			p.add(pUsersLabel);
+			pUsersLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 			addLogin();
-			p.add(users);
+			p.add(pUsers);
 			p.add(Box.createVerticalStrut(15));
-			p.add(connect);
+			p.add(pConnect);
 			p.add(Box.createVerticalStrut(15));
-			p.add(newUserCreate);
-			newUserCreate.setAlignmentX(Component.CENTER_ALIGNMENT);
-			newUserCreate.addActionListener(new addButtonListener());
+			p.add(pNewUserCreate);
+			pNewUserCreate.setAlignmentX(Component.CENTER_ALIGNMENT);
+			pNewUserCreate.addActionListener(new addButtonListener());
 
-			connect.setAlignmentX(Component.CENTER_ALIGNMENT);
-			connect.addActionListener(new addButtonListener());
+			pConnect.setAlignmentX(Component.CENTER_ALIGNMENT);
+			pConnect.addActionListener(new addButtonListener());
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -189,70 +209,82 @@ public class MainFrame extends JFrame {
 		return p;
 	}
 
+	/**
+	 * Adds the login components to the first frame.
+	 */
 	private void addLogin() {
-		users = new JComboBox(db.getUsers());
-		users.setMaximumSize(new Dimension(300, 20));
-		users.setAlignmentX(Component.CENTER_ALIGNMENT);
+		pUsers = new JComboBox<String>(pDatabaseConnect.getUsers());
+		pUsers.setMaximumSize(new Dimension(300, 20));
+		pUsers.setAlignmentX(Component.CENTER_ALIGNMENT);
 	}
 	
+	/**
+	 * Produces dialog to create a new project.
+	 */
 	private void createNewProject(){
 		JButton accept = new JButton("OK");
 		accept.addActionListener(new addButtonListener());
 		Label newProjLabel = new Label("New Project Name:");
-		projectCreate = new JDialog();
-		projectCreate.setLayout(new BorderLayout());
-		projectCreate.setTitle("Create New Project");
-		projectCreate.add(newProjLabel);
-		projectCreate.add(newProjLabel, BorderLayout.NORTH);
-		projectName = new JTextField("");
-		projectCreate.add(projectName, BorderLayout.CENTER);
-		projectCreate.add(accept, BorderLayout.SOUTH);
-		projectCreate.pack();
-		projectCreate.setSize(200, 100);
-		projectCreate.setLocationRelativeTo(null);
-		projectCreate.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		projectCreate.setVisible(true);
+		pProjectCreate = new JDialog();
+		pProjectCreate.setLayout(new BorderLayout());
+		pProjectCreate.setTitle("Create New Project");
+		pProjectCreate.add(newProjLabel);
+		pProjectCreate.add(newProjLabel, BorderLayout.NORTH);
+		pProjectName = new JTextField("");
+		pProjectCreate.add(pProjectName, BorderLayout.CENTER);
+		pProjectCreate.add(accept, BorderLayout.SOUTH);
+		pProjectCreate.pack();
+		pProjectCreate.setSize(200, 100);
+		pProjectCreate.setLocationRelativeTo(null);
+		pProjectCreate.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		pProjectCreate.setVisible(true);
 
 	}
 	
+	/**
+	 * Produces dialog to upload a new file to a project.
+	 */
 	private void UploadFile(){
 		JButton accept = new JButton("Add File");
 		JButton choose = new JButton("Choose File");
 		accept.addActionListener(new addButtonListener());
 		choose.addActionListener(new addButtonListener());
 		Label newProjLabel = new Label("File Description:");
-		uploadFiles = new JDialog();
-		uploadFiles.setLayout(new GridLayout(4,0));
-		uploadFiles.setTitle("Add XML File");
-		uploadFiles.add(choose);
-		uploadFiles.add(newProjLabel);
-		fileDescription = new JTextField("");
-		uploadFiles.add(fileDescription);
-		uploadFiles.add(accept);
-		uploadFiles.pack();
-		uploadFiles.setSize(200, 100);
-		uploadFiles.setLocationRelativeTo(null);
-		uploadFiles.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		uploadFiles.setVisible(true);
+		pUploadFiles = new JDialog();
+		pUploadFiles.setLayout(new GridLayout(4,0));
+		pUploadFiles.setTitle("Add XML File");
+		pUploadFiles.add(choose);
+		pUploadFiles.add(newProjLabel);
+		pFileDescription = new JTextField("");
+		pUploadFiles.add(pFileDescription);
+		pUploadFiles.add(accept);
+		pUploadFiles.pack();
+		pUploadFiles.setSize(200, 100);
+		pUploadFiles.setLocationRelativeTo(null);
+		pUploadFiles.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		pUploadFiles.setVisible(true);
 
 	}
 
+	/**
+	 * Sets the screen holding the projects for each user.
+	 */
 	private void setProjScreen() {
-		projectsScreen.setLayout(new BorderLayout());
+		pProjectsScreen.setLayout(new BorderLayout());
 
-		crtUser = users.getSelectedItem().toString();
+		pCrtUser = pUsers.getSelectedItem().toString();
 
-		final ArrayList<String[]> tableDataFull = db.getProjects(crtUser);
+		final ArrayList<String[]> tableDataFull = pDatabaseConnect.getProjects(pCrtUser);
 
-		String[] columnnames = { "Project Name", "Last Updated", " "};
+		pProjects = new JTable(){
+			private static final long serialVersionUID = 1L;
 
-		projects = new JTable(){
 			public boolean isCellEditable(int row, int column){
 				return false;
 			}
 		};
 		
-		projects.addMouseListener(new MouseAdapter() {
+		pProjects.addMouseListener(new MouseAdapter() {
 			  public void mouseClicked(MouseEvent e) {
 			    if (e.getClickCount() == 2) {
 			      JTable target = (JTable)e.getSource();
@@ -260,13 +292,13 @@ public class MainFrame extends JFrame {
 			      int column = target.getSelectedColumn();
 			      
 			      if(column == 2){
-			    	  db.deleteProject(tableDataFull.get(row)[0], crtUser);
+			    	  pDatabaseConnect.deleteProject(tableDataFull.get(row)[0], pCrtUser);
 			    	  
-			    	  JFrame frame = (JFrame) SwingUtilities.getRoot(projectsScreen.getParent());
-						projectsScreen.removeAll();
-						statusLabel.setText("Projects Refreshed");
+			    	  JFrame frame = (JFrame) SwingUtilities.getRoot(pProjectsScreen.getParent());
+						pProjectsScreen.removeAll();
+						pStatusLabel.setText("Projects Refreshed");
 						setProjScreen();
-						frame.add(projectsScreen);
+						frame.add(pProjectsScreen);
 						frame.validate();
 						frame.repaint();
 			      }else{
@@ -276,7 +308,7 @@ public class MainFrame extends JFrame {
 			  }
 			});
 		
-		DefaultTableModel model = (DefaultTableModel) projects.getModel();
+		DefaultTableModel model = (DefaultTableModel) pProjects.getModel();
 
 		model.addColumn("Project Name");
 		model.addColumn("Last Updated");
@@ -289,71 +321,79 @@ public class MainFrame extends JFrame {
 
 		DefaultTableCellRenderer   render = new DefaultTableCellRenderer ();
 		render.setHorizontalAlignment (SwingConstants.CENTER);
-		projects.getColumnModel().getColumn(2).setCellRenderer(render);
+		pProjects.getColumnModel().getColumn(2).setCellRenderer(render);
 		
-		projects.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-		projects.getColumnModel().getColumn(0).setPreferredWidth(400);
-		projects.getColumnModel().getColumn(1).setPreferredWidth(100);
+		pProjects.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+		pProjects.getColumnModel().getColumn(0).setPreferredWidth(400);
+		pProjects.getColumnModel().getColumn(1).setPreferredWidth(100);
 		
-		projectsScreen.add(new JScrollPane(projects));
+		pProjectsScreen.add(new JScrollPane(pProjects));
 		
 	}
 	
+	/**
+	 * When a specific project is selected, the sorting screen opens for that project.
+	 * @param projectName - String.
+	 */
 	private void goToProject(String projectName) {
 		
-		JFrame frame = (JFrame) SwingUtilities.getRoot(projectsScreen.getParent());
-		frame.remove(projectsScreen);
-		statusLabel.setText("Project Page Loading");
-		frame.add(sortingScreen);
+		JFrame frame = (JFrame) SwingUtilities.getRoot(pProjectsScreen.getParent());
+		frame.remove(pProjectsScreen);
+		pStatusLabel.setText("Project Page Loading");
+		frame.add(pSortingScreen);
 		frame.validate();
 		frame.repaint();
-		statusLabel.setText("Sorting Screen Loaded. Double click paper to see keyword trends.");
-		menuBar.removeAll();
+		pStatusLabel.setText("Sorting Screen Loaded. Double click paper to see keyword trends.");
+		pMenuBar.removeAll();
 		addProjectDetails(projectName);
-		frame.add(sortingScreen);
+		frame.add(pSortingScreen);
 		frame.validate();
 		frame.repaint();
 		
-		menuBar.removeAll();
+		pMenuBar.removeAll();
 		setSortingMenu();
 	}
 	
+	/**
+	 * Allows for XML files to be added for a specific project.
+	 * @param projectName - String.
+	 */
 	private void addProjectDetails(String projectName){
 		
-		statusLabel.setText("Loading project details. Please wait.");
+		pStatusLabel.setText("Loading project details. Please wait.");
 		
-		projectNameValue = projectName;
+		pProjectNameValue = projectName;
 
 		
 			JLabel NaN = new JLabel("No XML files uploaded. Add file in top menu");
 			
 			Panel p = new Panel();
 		
-			sortingScreen.setLayout(new BorderLayout());
+			pSortingScreen.setLayout(new BorderLayout());
 
-			crtUser = users.getSelectedItem().toString();
+			pCrtUser = pUsers.getSelectedItem().toString();
 
-			String tableDataFull = db.getFiles(crtUser, projectName);
+			String tableDataFull = pDatabaseConnect.getFiles(pCrtUser, projectName);
 			
 			
 			if(tableDataFull.equals("NaN")){
 				p.add(NaN);
 				NaN.setAlignmentX(SwingConstants.CENTER);
-				sortingScreen.add(p);
+				pSortingScreen.add(p);
 			}else{
 			
 
-			sortingTable = new JTable(){
+			pSortingTable = new JTable(){
 				public boolean isCellEditable(int row, int column){
 					return false;
 				}
 			};
 			
-			ImpactFactorFilter f = new ImpactFactorFilter(tableDataFull);
+			ImputDataOrganizer f = new ImputDataOrganizer(tableDataFull);
 			final ArrayList<String[]> populateTable = f.returnRanked();
 
 			
-			sortingTable.addMouseListener(new MouseAdapter() {
+			pSortingTable.addMouseListener(new MouseAdapter() {
 				  public void mouseClicked(MouseEvent e) {
 				    if (e.getClickCount() == 2) {
 				      JTable target = (JTable)e.getSource();
@@ -362,17 +402,17 @@ public class MainFrame extends JFrame {
 				      String url = populateTable.get(row)[5].substring(1, populateTable.get(row)[5].length()-1);
 
 				      if(!url.isEmpty()){
-				    	statusLabel.setText("Loading Graph!");
+				    	pStatusLabel.setText("Loading Graph!");
 				    	PubmedGraphs g = new PubmedGraphs(url);
 				      }else{
-				    	statusLabel.setText("Graph could not be loaded.");
+				    	pStatusLabel.setText("Graph could not be loaded.");
 				      }
 				    }
 				  }
 				});
 			
 			
-			DefaultTableModel model = (DefaultTableModel) sortingTable.getModel();
+			DefaultTableModel model = (DefaultTableModel) pSortingTable.getModel();
 
 			model.addColumn("Title");
 			model.addColumn("Impact Factor (Current)");
@@ -399,11 +439,42 @@ public class MainFrame extends JFrame {
 			}
 
 			
-			sortingScreen.add(new JScrollPane(sortingTable));
+			pSortingScreen.add(new JScrollPane(pSortingTable));
 			
 		}
 	}
+	
+	/**
+	 * Allows for adding and removing of users on the main login page.
+	 */
+	private void createNewUser(){
+		JButton addUserButton = new JButton("Add User");
+		JButton removeUserButton = new JButton("Remove User");
 
+		addUserButton.addActionListener(new addButtonListener());
+		removeUserButton.addActionListener(new addButtonListener());
+		
+		Label addUserLabel = new Label("User Name:");
+		pModifyUser = new JDialog();
+		pModifyUser.setLayout(new GridLayout(4,0));
+		pModifyUser.setTitle("Add/Remove User");
+		pModifyUser.add(addUserLabel);
+		pNewUserNameInput = new JTextField("");
+		pModifyUser.add(pNewUserNameInput);
+		pModifyUser.add(addUserButton);
+		pModifyUser.add(removeUserButton);
+		pModifyUser.pack();
+		pModifyUser.setSize(200, 100);
+		pModifyUser.setLocationRelativeTo(null);
+		pModifyUser.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		pModifyUser.setVisible(true);
+	}
+
+	/**
+	 * Action listener which controls the buttons that are clickable throughout the program.
+	 * @author Maxim Gorshkov
+	 *
+	 */
 	class addButtonListener implements ActionListener {
 
 		@Override
@@ -411,46 +482,46 @@ public class MainFrame extends JFrame {
 			JButton j = null;
 			JMenuItem i = null;
 
-			if (e.getSource().getClass().equals(connect.getClass())) {
+			if (e.getSource().getClass().equals(pConnect.getClass())) {
 				j = (JButton) e.getSource();
 
 				if (j.getText().equals("Connect")) {
 					JFrame frame = (JFrame) SwingUtilities.getRoot(j);
-					frame.remove(loginScreen);
-					statusLabel.setText("Projects Loading");
-					projectsScreen.removeAll();
+					frame.remove(pLoginScreen);
+					pStatusLabel.setText("Projects Loading");
+					pProjectsScreen.removeAll();
 					setProjScreen();
 
-					frame.add(projectsScreen);
+					frame.add(pProjectsScreen);
 					frame.validate();
 					frame.repaint();
-					statusLabel.setText("Projects Loaded - Select project to continue...");
+					pStatusLabel.setText("Projects Loaded - Select project to continue...");
 					
-					menuBar.removeAll();
+					pMenuBar.removeAll();
 					setMenu();
 				}
 				if(j.getText().equals("OK")){
-					projectCreate.setVisible(false);
-					System.out.println(projectName.getText());
-					boolean b = db.addProject(projectName.getText(), crtUser);	
+					pProjectCreate.setVisible(false);
+					System.out.println(pProjectName.getText());
+					boolean b = pDatabaseConnect.addProject(pProjectName.getText(), pCrtUser);	
 					
-					JFrame frame = (JFrame) SwingUtilities.getRoot(projectsScreen.getParent());
-					projectsScreen.removeAll();
-					statusLabel.setText("Projects Refreshed");
+					JFrame frame = (JFrame) SwingUtilities.getRoot(pProjectsScreen.getParent());
+					pProjectsScreen.removeAll();
+					pStatusLabel.setText("Projects Refreshed");
 					setProjScreen();
-					frame.add(projectsScreen);
+					frame.add(pProjectsScreen);
 					frame.validate();
 					frame.repaint();
 				}
 				if(j.getText().equals("Add File")){
-					uploadFiles.setVisible(false);
-					boolean b = db.addXML(crtUser, fileDescription.getText(), projectNameValue, sortingXMLFile);	
+					pUploadFiles.setVisible(false);
+					pDatabaseConnect.addXML(pCrtUser, pFileDescription.getText(), pProjectNameValue, pSortingXMLFile);	
 					
-					JFrame frame = (JFrame) SwingUtilities.getRoot(sortingScreen.getParent());
+					JFrame frame = (JFrame) SwingUtilities.getRoot(pSortingScreen.getParent());
 					frame.removeAll();
-					statusLabel.setText("XML File Added");
-					addProjectDetails(projectNameValue);
-					frame.add(sortingScreen);
+					pStatusLabel.setText("XML File Added");
+					addProjectDetails(pProjectNameValue);
+					frame.add(pSortingScreen);
 					frame.validate();
 					frame.repaint();
 
@@ -458,39 +529,53 @@ public class MainFrame extends JFrame {
 				if(j.getText().equals("Choose File")){
 					//Create a file chooser
 					final JFileChooser fc = new JFileChooser();
-					int returnVal = fc.showSaveDialog(projectsScreen.getParent());
+					int returnVal = fc.showSaveDialog(pProjectsScreen.getParent());
 					if(returnVal == 0){
-						sortingXMLFile = fc.getSelectedFile().toString();
+						pSortingXMLFile = fc.getSelectedFile().toString();
 					}
 				}
 				
-				if (j.getText().equals("New User")) {
+				if (j.getText().equals("Modify User")) {
 					createNewUser();
 				}
 				if(j.getText().equals("Add User")){
-					db.makeUser(newUserNameName.getText());
-					newUser.dispose();
-					JFrame frame = (JFrame) SwingUtilities.getRoot(j);
-					frame.removeAll();
+					pDatabaseConnect.makeUser(pNewUserNameInput.getText());
+					pModifyUser.dispose();
+					JFrame frame = (JFrame) SwingUtilities.getRoot(pLoginScreen.getParent());
+					frame.remove(pLoginScreen);
+					pLoginScreen.removeAll();
+					pLoginScreen.add(addGrid());
+					frame.add(pLoginScreen);
+					frame.validate();
+					frame.repaint();
+				}
+				if(j.getText().equals("Remove User")){
+					pDatabaseConnect.deleteUser(pNewUserNameInput.getText());
+					pModifyUser.dispose();
+					JFrame frame = (JFrame) SwingUtilities.getRoot(pLoginScreen.getParent());
+					frame.remove(pLoginScreen);
+					pLoginScreen.removeAll();
+					pLoginScreen.add(addGrid());
+					frame.add(pLoginScreen);
 					frame.validate();
 					frame.repaint();
 				}
 
-			} else if (e.getSource().getClass().equals(exit.getClass())) {
+			} else if (e.getSource().getClass().equals(pExitItem.getClass())) {
 				i = (JMenuItem) e.getSource();
 
 				if (i.getText().equals("New Project")) {
 					createNewProject();
 				}
 				if (i.getText().equals("Exit to Login")) {
-					JFrame frame = (JFrame) SwingUtilities.getRoot(projectsScreen.getParent());
-					frame.remove(projectsScreen);
-					statusLabel.setText("Login Screen Loading");
-					frame.add(loginScreen);
+					JFrame frame = (JFrame) SwingUtilities.getRoot(pProjectsScreen.getParent());
+					frame.remove(pProjectsScreen);
+					pStatusLabel.setText("Login Screen Loading");
+					frame.add(pLoginScreen);
 					frame.validate();
 					frame.repaint();
-					statusLabel.setText("Login Screen Loaded");
-					menuBar.removeAll();
+					pStatusLabel.setText("Login Screen Loaded");
+					pMenuBar.removeAll();
 				}
 				if(i.getText().equals("Manage Files")){
 					UploadFile();
@@ -499,22 +584,6 @@ public class MainFrame extends JFrame {
 		}
 	}
 	
-	private void createNewUser(){
-		JButton addUserButton = new JButton("Add User");
-		addUserButton.addActionListener(new addButtonListener());
-		Label addUserLabel = new Label("User Name:");
-		newUser = new JDialog();
-		newUser.setLayout(new GridLayout(3,0));
-		newUser.setTitle("Add New User");
-		newUser.add(addUserLabel);
-		newUserNameName = new JTextField("");
-		newUser.add(newUserNameName);
-		newUser.add(addUserButton);
-		newUser.pack();
-		newUser.setSize(200, 100);
-		newUser.setLocationRelativeTo(null);
-		newUser.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		newUser.setVisible(true);
-	}
+	
 	
 }

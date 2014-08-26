@@ -1,4 +1,4 @@
-package com.CMD;
+package com.Scrape;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,38 +9,51 @@ import java.util.Map.Entry;
 
 import com.ImExport.ImportXML;
 import com.SQL.DatabaseConnector;
-import com.Scrape.ConnectHIndex;
-import com.Scrape.ConnectScholarCited;
-import com.Scrape.GetIFRankInField;
 
-public class ImpactFactorFilter {
+/**
+ * Organizes the different types of data that exists for the individual papers in a format 
+ * which can be displayed in the main table.
+ * @author Maxim Gorshkov
+ *
+ */
+public class ImputDataOrganizer {
 	
-	final String CrtYEAR = "2012";
-	final String CrtYEARCitationYear = "2014";
+	private final String CRT_YEAR = "2012";
+	private final String CRT_YEAR_CITATIONS = "2014";
 	
-	HashMap<String, ArrayList<String>[]> data;
-	ArrayList<String[]> ranked;
-	DatabaseConnector db;
-	String XMLPath;
+	private HashMap<String, ArrayList<String>[]> pOverallData;
+	private ArrayList<String[]> pRanked;
+	private DatabaseConnector pDatabaseConnection;
+	private String pXMLPath;
 	
-	public ImpactFactorFilter(String path){
-		data = new HashMap<String, ArrayList<String>[]>();
-		ranked = new ArrayList<String[]>();
-		db = new DatabaseConnector();
-		XMLPath = path;
+	/**
+	 * Constructor. Takes in the path to the XML file and starts to collect data.
+	 * @param path - String.
+	 */
+	public ImputDataOrganizer(String path){
+		pOverallData = new HashMap<String, ArrayList<String>[]>();
+		pRanked = new ArrayList<String[]>();
+		pDatabaseConnection = new DatabaseConnector();
+		pXMLPath = path;
 		
 		getData();
 		filter();
-		showRank();
+		sortRank();
 	}
 	
+	/**
+	 * Parses the XML file.
+	 */
 	private void getData(){
-		ImportXML x = new ImportXML(XMLPath);
-		data = x.returnData();
+		ImportXML x = new ImportXML(pXMLPath);
+		pOverallData = x.returnData();
 	}
 	
+	/**
+	 * Filters data through the various scraping tools to retrieve overall data.
+	 */
 	private void filter(){
-		Iterator<Entry<String, ArrayList<String>[]>> it = data.entrySet().iterator();
+		Iterator<Entry<String, ArrayList<String>[]>> it = pOverallData.entrySet().iterator();
 		it.next();
 		while(it.hasNext()){			
 			String[] temp = new String[16];
@@ -50,13 +63,13 @@ public class ImpactFactorFilter {
 			String pubyear = e.getValue()[3].get(0);
 			
 			String a = e.getKey();
-			double current = db.getImpactFactor(e.getValue()[1].get(0), CrtYEAR);
+			double current = pDatabaseConnection.getImpactFactor(e.getValue()[1].get(0), CRT_YEAR);
 			double atpub = 0.0;
 
-			if(Integer.parseInt(pubyear) >= Integer.parseInt(CrtYEAR)){
+			if(Integer.parseInt(pubyear) >= Integer.parseInt(CRT_YEAR)){
 				atpub = current;
 			}else{
-				atpub = db.getImpactFactor(e.getValue()[1].get(0), pubyear);
+				atpub = pDatabaseConnection.getImpactFactor(e.getValue()[1].get(0), pubyear);
 			}
 			
 			
@@ -72,7 +85,7 @@ public class ImpactFactorFilter {
 			 temp[14] = ""+g.gethIndex();
 			 temp[2] = ""+g.getRanking();
 			
-			GetIFRankInField g2 = new GetIFRankInField(e.getValue()[1].get(1), CrtYEAR);
+			GetIFRankInField g2 = new GetIFRankInField(e.getValue()[1].get(1), CRT_YEAR);
 			temp[15] = ""+g2.gethIndex();
 			temp[3] = ""+g2.getRanking();
 			
@@ -83,7 +96,7 @@ public class ImpactFactorFilter {
 				temp[12] = "Not Available";
 			}else{
 				temp[6] = ""+j.getCitations();
-				int yearDif = (Integer.parseInt(CrtYEARCitationYear) - Integer.parseInt(pubyear));
+				int yearDif = (Integer.parseInt(CRT_YEAR_CITATIONS) - Integer.parseInt(pubyear));
 				if (yearDif < 1){
 					yearDif = 1;
 				}
@@ -114,12 +127,14 @@ public class ImpactFactorFilter {
 					temp[4] = "("+(current-atpub)+")";
 				}
 			}
-			ranked.add(temp);
+			pRanked.add(temp);
 		}
 	}
-	
-	private void showRank(){
-		Collections.sort(ranked, new Comparator<String[]>(){
+	/**
+	 * Sorts the papers based on the rank of the impact factor.
+	 */
+	private void sortRank(){
+		Collections.sort(pRanked, new Comparator<String[]>(){
 
 			@Override
 			public int compare(String[] o1, String[] o2) {
@@ -134,31 +149,22 @@ public class ImpactFactorFilter {
 			
 		});
 		
-		for(int i = 0; i<ranked.size(); i++){
-			System.out.println("Rank "+(i+1));
-			System.out.println(ranked.get(i)[1]);
-			System.out.println(ranked.get(i)[2]);
-//			ranked.get(i)[8] = calcPercentile(ranked.get(i)[2], ranked, 2);
-//
-//			System.out.println(ranked.get(i)[3]);
-//			ranked.get(i)[9] = calcPercentile(ranked.get(i)[3], ranked, 3);
-
-			System.out.println(ranked.get(i)[4]);
-			
-			System.out.println(ranked.get(i)[6]);
-			ranked.get(i)[10] = calcPercentile(ranked.get(i)[6], ranked, 6);
-
-			System.out.println(ranked.get(i)[7]);
-			ranked.get(i)[11] = calcPercentile(ranked.get(i)[7], ranked, 7);
-
-			System.out.println();
+		for(int i = 0; i<pRanked.size(); i++){
+			pRanked.get(i)[10] = calcPercentile(pRanked.get(i)[6], pRanked, 6);
+			pRanked.get(i)[11] = calcPercentile(pRanked.get(i)[7], pRanked, 7);
 		}
 	}
 	
+	/**
+	 * Calculates the percentile based on the values of the other parameters
+	 * @param current - Item being compared.
+	 * @param input - All items.
+	 * @param id - What attribute to compare.
+	 * @return String - Percentile.
+	 */
 	private String calcPercentile(String current, ArrayList<String[]> input, int id){
 		String toReturn = "Not available";
 		try{
-			double total = 0;
 			double currentD = Double.parseDouble(current);
 			int below = 0;
 			int equal = 0;
@@ -188,17 +194,10 @@ public class ImpactFactorFilter {
 	}
 	
 	/**
-	 * get(i) [1] Title
-	 * get(i) [2] Current Impact
-	 * get(i) [3] Old Impact
-	 * get(i) [4] Keywords
-	 * @return
+	 * Return the full attributes of the paper to be used in the table.
+	 * @return pRanked ArrayList<String[]> 	
 	 */
 	public ArrayList<String[]> returnRanked(){
-		return ranked;
-	}
-	
-	public static void main(String[] args) {
-		ImpactFactorFilter f = new ImpactFactorFilter("./res/TestLibrary.xml");
+		return pRanked;
 	}
 }

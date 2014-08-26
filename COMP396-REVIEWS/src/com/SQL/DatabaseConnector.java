@@ -112,11 +112,26 @@ public class DatabaseConnector {
 	/**
 	 * Creates a new user with a specifed name.
 	 * @param inputName - String.
-	 * @return boolean - weather the creation was successful.
+	 * @return boolean - whether the creation was successful.
 	 */
 	public boolean makeUser(String inputName){
 		try {
 			pStatement.execute("INSERT INTO Users VALUES (null,'" + inputName+ "')");
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	/**
+	 * Deletes a new user with a specifed name.
+	 * @param inputName - String.
+	 * @return boolean - whether the deletion was successful.
+	 */
+	public boolean deleteUser(String inputName){
+		try {
+			pStatement.execute("DELETE From Users WHERE Username = '" + inputName+ "'");
 			return true;
 		} catch (SQLException e) {
 			e.printStackTrace();

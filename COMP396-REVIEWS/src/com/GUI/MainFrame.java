@@ -55,7 +55,7 @@ import com.Scrape.ConnectPubMedTrends;
 import com.Scrape.PubmedGraphs;
 
 /**
- * Main window responsible for being the main container.
+ * Main window responsible for the main container.
  * Summer 2014
  * @author Maxim Gorshkov
  * 
@@ -76,17 +76,23 @@ public class MainFrame extends JFrame {
 	JLabel statusLabel = new JLabel("");
 	JLabel usersLabel = new JLabel("Select User:");
 	JButton connect = new JButton("Connect");
+	JButton newUserCreate = new JButton("New User");
+	JButton addUserButton = new JButton("Add User");
+	
+	JTextField newUserNameName;
 
 	JTable projects;
 	JTable sortingTable;
 
-	JComboBox users;
+	JComboBox<String> users;
 	
 	String projectNameValue;
 	
 	JDialog projectCreate;
 	JDialog uploadFiles;
 	JDialog googletrends;
+	JDialog newUser;
+	
 	String sortingXMLFile;
 	
 	private DatabaseConnector db;
@@ -167,8 +173,13 @@ public class MainFrame extends JFrame {
 			usersLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 			addLogin();
 			p.add(users);
-			p.add(Box.createVerticalStrut(35));
+			p.add(Box.createVerticalStrut(15));
 			p.add(connect);
+			p.add(Box.createVerticalStrut(15));
+			p.add(newUserCreate);
+			newUserCreate.setAlignmentX(Component.CENTER_ALIGNMENT);
+			newUserCreate.addActionListener(new addButtonListener());
+
 			connect.setAlignmentX(Component.CENTER_ALIGNMENT);
 			connect.addActionListener(new addButtonListener());
 
@@ -347,20 +358,15 @@ public class MainFrame extends JFrame {
 				    if (e.getClickCount() == 2) {
 				      JTable target = (JTable)e.getSource();
 				      int row = target.getSelectedRow();
-				      int column = target.getSelectedColumn();
 
 				      String url = populateTable.get(row)[5].substring(1, populateTable.get(row)[5].length()-1);
 
-						//gotoGoogleTrends("http://www.google.com/trends/fetchComponent?q="+url+"&cid=TIMESERIES_GRAPH_0&export=5");
 				      if(!url.isEmpty()){
 				    	statusLabel.setText("Loading Graph!");
-						//pubmedTrends(url);
 				    	PubmedGraphs g = new PubmedGraphs(url);
 				      }else{
 				    	statusLabel.setText("Graph could not be loaded.");
 				      }
-						// http://www2.ph.ed.ac.uk/~wjh/faq/graph/ <- for graphs from pubmed
-						//http://stackoverflow.com/questions/1304404/jfreechart-for-dynamic-xy-plots-in-java-swing-gui-application <-more pubmed
 				    }
 				  }
 				});
@@ -457,6 +463,18 @@ public class MainFrame extends JFrame {
 						sortingXMLFile = fc.getSelectedFile().toString();
 					}
 				}
+				
+				if (j.getText().equals("New User")) {
+					createNewUser();
+				}
+				if(j.getText().equals("Add User")){
+					db.makeUser(newUserNameName.getText());
+					newUser.dispose();
+					JFrame frame = (JFrame) SwingUtilities.getRoot(j);
+					frame.removeAll();
+					frame.validate();
+					frame.repaint();
+				}
 
 			} else if (e.getSource().getClass().equals(exit.getClass())) {
 				i = (JMenuItem) e.getSource();
@@ -478,96 +496,25 @@ public class MainFrame extends JFrame {
 					UploadFile();
 				}
 			}
-
 		}
 	}
 	
-	private void gotoGoogleTrends(String urlinput){
-		googletrends = new JDialog();
-		googletrends.setTitle("Google Trends Graph");
-		
-		JEditorPane jep = new JEditorPane();
-		jep.setEditable(false);   
-
-		try {
-		  jep.setPage(urlinput);
-		}catch (IOException e) {
-		  jep.setContentType("text/html");
-		  jep.setText("<html>Could not load</html>");
-		} 
-		
-		JScrollPane scrollPane = new JScrollPane(jep);     
-		googletrends.add(scrollPane);
-		
-		googletrends.pack();
-		googletrends.setSize(600, 400);
-		googletrends.setLocationRelativeTo(null);
-		googletrends.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		googletrends.setVisible(true);
-
-	}
-	
-	private void pubmedTrends(String input){
-		googletrends = new JDialog();
-		googletrends.setTitle("Google Trends Graph");
-
-        XYDataset ds = createDataset(input);
-       // JFreeChart chart = ChartFactory.createBarChart("Keyword Trends", "Year", "No Papers Published", (CategoryDataset) ds);
-        JFreeChart chart = ChartFactory.createXYLineChart("Keyword Trends",
-                "Year", "No. Papers with Keyword", ds, PlotOrientation.VERTICAL, true, true,
-                false);
-
-        ChartPanel cp = new ChartPanel(chart);
-
-        googletrends.add(cp);
-        googletrends.pack();
-		googletrends.setSize(600, 400);
-		googletrends.setLocationRelativeTo(null);
-		googletrends.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		googletrends.setVisible(true);
-    }
-
-	private XYDataset createDataset(String input) {
-		String[] inputs = input.split(", ");
-		
-        DefaultXYDataset ds = new DefaultXYDataset();
-        
-        for(String key : inputs){
-        	ArrayList<Double> year = new ArrayList<Double>();
-        	ArrayList<Double> entry = new ArrayList<Double>();
-        	
-        ConnectPubMedTrends p = new ConnectPubMedTrends(key);
-        HashMap<Integer, Integer> map = p.getYearMap();
-        if(!map.isEmpty()){
-        Iterator<Entry<Integer,Integer>> i = map.entrySet().iterator();
-        while(i.hasNext()){
-        	Entry<Integer,Integer> e = i.next();
-        	year.add(Double.parseDouble(""+e.getKey()));
-        	entry.add(Double.parseDouble(""+e.getValue()));
-        	
-        }
-        	Object[] yearObj = year.toArray();
-        	Object[] entryObj = entry.toArray();
-        	
-        	double[] yeardouble = new double[yearObj.length];
-        	double[] entrydouble = new double[entryObj.length];
-        	
-        	for(int j = 0; j<yeardouble.length; j++){
-        		yeardouble[j] = Double.parseDouble(""+yearObj[j]);
-        	}
-        	
-        	for(int j = 0; j<entrydouble.length; j++){
-        		entrydouble[j] = Double.parseDouble(""+entryObj[j]);
-
-        	}
-        	
-        	double[][] data = {yeardouble, entrydouble};
-   	 
-        	ds.addSeries(key, data);
-        }
-        }
-            return ds;
-
+	private void createNewUser(){
+		JButton addUserButton = new JButton("Add User");
+		addUserButton.addActionListener(new addButtonListener());
+		Label addUserLabel = new Label("User Name:");
+		newUser = new JDialog();
+		newUser.setLayout(new GridLayout(3,0));
+		newUser.setTitle("Add New User");
+		newUser.add(addUserLabel);
+		newUserNameName = new JTextField("");
+		newUser.add(newUserNameName);
+		newUser.add(addUserButton);
+		newUser.pack();
+		newUser.setSize(200, 100);
+		newUser.setLocationRelativeTo(null);
+		newUser.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		newUser.setVisible(true);
 	}
 	
 }

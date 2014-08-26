@@ -108,6 +108,21 @@ public class DatabaseConnector {
 		}
 		return s;
 	}
+	
+	/**
+	 * Creates a new user with a specifed name.
+	 * @param inputName - String.
+	 * @return boolean - weather the creation was successful.
+	 */
+	public boolean makeUser(String inputName){
+		try {
+			pStatement.execute("INSERT INTO Users VALUES (null,'" + inputName+ "')");
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 
 	/**
 	 * Get parameters related to all projects for a specific user.

@@ -113,7 +113,6 @@ public class MainFrame extends JFrame {
 		setLocationRelativeTo(null);
 
 		pLoginScreen.add(addGrid());
-		// setMenu();
 		this.setJMenuBar(pMenuBar);
 		setStatus();
 		this.add(pLoginScreen);
@@ -360,6 +359,7 @@ public class MainFrame extends JFrame {
 	 */
 	private void addProjectDetails(String projectName){
 		
+		
 		pStatusLabel.setText("Loading project details. Please wait.");
 		
 		pProjectNameValue = projectName;
@@ -388,10 +388,10 @@ public class MainFrame extends JFrame {
 					return false;
 				}
 			};
-			
+
 			ImputDataOrganizer f = new ImputDataOrganizer(tableDataFull);
 			final ArrayList<String[]> populateTable = f.returnRanked();
-
+			System.out.println(populateTable);
 			
 			pSortingTable.addMouseListener(new MouseAdapter() {
 				  public void mouseClicked(MouseEvent e) {

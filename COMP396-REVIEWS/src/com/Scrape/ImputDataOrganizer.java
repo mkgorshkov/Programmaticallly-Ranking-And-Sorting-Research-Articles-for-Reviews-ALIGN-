@@ -63,6 +63,7 @@ public class ImputDataOrganizer {
 			String pubyear = e.getValue()[3].get(0);
 			
 			String a = e.getKey();
+			System.out.println(a);
 			double current = pDatabaseConnection.getImpactFactor(e.getValue()[1].get(0), CRT_YEAR);
 			double atpub = 0.0;
 
@@ -128,6 +129,7 @@ public class ImputDataOrganizer {
 				}
 			}
 			pRanked.add(temp);
+			System.out.println(temp);
 		}
 	}
 	/**
@@ -198,6 +200,7 @@ public class ImputDataOrganizer {
 	 * @return pRanked ArrayList<String[]> 	
 	 */
 	public ArrayList<String[]> returnRanked(){
+		System.out.println(pRanked);
 		return pRanked;
 	}
 }
